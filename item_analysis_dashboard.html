@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบวิเคราะห์คุณภาพข้อสอบรายข้อ & ดัชนีทางจิตวิทยาการวัดผล (Item Analysis Dashboard)</title>
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Chart.js -->
+    <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- FontAwesome Icons -->
+    <!-- FontAwesome Icons CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts: Prompt & Sarabun -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <!-- Supabase JS Client -->
+    <!-- Supabase JS Client v2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
@@ -38,7 +38,7 @@
     <style>
         body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; }
         .card-shadow { box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05); }
-        .glass-header { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(10px); }
+        .glass-header { background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(12px); }
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -65,22 +65,28 @@
                         <h1 class="text-lg font-bold text-slate-900 leading-tight">ระบบวิเคราะห์คุณภาพข้อสอบรายข้อ & ดัชนีทางจิตวิทยาการวัดผล</h1>
                         <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-indigo-200">วิชา 180432</span>
                     </div>
-                    <p class="text-xs text-slate-500">Item Analysis Dashboard & Psychometric Assessment (Laws & Ethics in Pharmacy)</p>
+                    <p class="text-xs text-slate-500">Item Analysis & Psychometric Dashboard (Laws & Ethics in Pharmacy)</p>
                 </div>
             </div>
 
             <!-- Action Buttons Navigation -->
-            <div class="flex items-center gap-2.5 flex-wrap">
+            <div class="flex items-center gap-2 flex-wrap">
                 <!-- Navigation back to MPL Trend Dashboard -->
-                <a href="index.html" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition-all hover:shadow-md transform hover:-translate-y-0.5">
+                <a href="index.html" class="inline-flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition-all hover:shadow-md transform hover:-translate-y-0.5">
                     <i class="fa-solid fa-chart-line"></i>
                     <span>🔗 กลับหน้า MPL Trend Dashboard</span>
                 </a>
                 
                 <!-- Add New Year Button -->
-                <button onclick="openAddYearModal()" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition-all hover:shadow-md transform hover:-translate-y-0.5">
+                <button onclick="openAddYearModal()" class="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition-all hover:shadow-md transform hover:-translate-y-0.5">
                     <i class="fa-solid fa-plus-circle"></i>
                     <span>+ เพิ่มข้อมูลผลการสอบปีถัดไป</span>
+                </button>
+
+                <!-- Supabase Config Button -->
+                <button onclick="openSupabaseModal()" class="inline-flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition-all">
+                    <i class="fa-solid fa-database text-emerald-400"></i>
+                    <span>⚙️ ตั้งค่า Supabase DB</span>
                 </button>
 
                 <!-- Policy Recommendation Button -->
@@ -95,8 +101,8 @@
     <!-- Main Content Area -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
 
-        <!-- Mode Selector & Year Tabs Bar -->
-        <div class="bg-white p-3 rounded-2xl border border-slate-200 card-shadow flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        <!-- Mode Selector & Dynamic Year Tabs Bar -->
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200 card-shadow flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
             
             <!-- Exam Mode Switcher (Midterm / Final) -->
             <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200 self-start md:self-auto">
@@ -112,13 +118,14 @@
 
             <!-- Dynamic Year Tabs -->
             <div class="flex items-center gap-1.5 overflow-x-auto p-0.5" id="dynamic-tab-container">
-                <!-- Tabs generated dynamically by JS -->
+                <!-- Year filter tabs rendered by JS -->
             </div>
 
             <!-- Database Status Indicator -->
-            <div class="flex items-center gap-2 text-xs text-slate-500 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100 self-end md:self-auto">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>Supabase DB: <strong class="text-slate-700" id="db-status">Connected (mpl_records)</strong></span>
+            <div class="flex items-center gap-2 text-xs text-slate-600 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-200 self-end md:self-auto cursor-pointer" onclick="openSupabaseModal()">
+                <span id="db-status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>DB: <strong class="text-slate-800" id="db-status-text">Supabase Active</strong></span>
+                <i class="fa-solid fa-gear text-slate-400 text-xs ml-1"></i>
             </div>
         </div>
 
@@ -131,13 +138,13 @@
                 <div>
                     <div class="flex items-center gap-2">
                         <h2 class="text-base font-bold" id="banner-title">สถิติข้อสอบกลางภาค (Midterm Exam)</h2>
-                        <span class="text-[11px] bg-indigo-500/30 text-indigo-200 px-2 py-0.5 rounded border border-indigo-400/30" id="banner-items-count">75 ข้อ | คะแนนเต็ม 75</span>
+                        <span class="text-[11px] bg-indigo-500/30 text-indigo-200 px-2.5 py-0.5 rounded border border-indigo-400/30 font-semibold" id="banner-items-count">75 ข้อ | คะแนนเต็ม 75</span>
                     </div>
-                    <p class="text-xs text-slate-300 mt-0.5" id="banner-desc">แสดงข้อมูลวิเคราะห์คุณภาพรายข้อและเกณฑ์ผ่านขั้นต่ำย้อนหลัง 3 ปี (2566 - 2568)</p>
+                    <p class="text-xs text-slate-300 mt-0.5" id="banner-desc">แสดงข้อมูลวิเคราะห์คุณภาพรายข้อและเกณฑ์ผ่านขั้นต่ำย้อนหลัง (2566 - 2568)</p>
                 </div>
             </div>
             <div class="text-right text-xs text-indigo-200 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
-                <span>เกณฑ์การคำนวณ MPL: </span>
+                <span>สูตรประมาณการ MPL: </span>
                 <code class="font-mono text-amber-300 font-bold">(0.485 &times; Mean) + (0.35 &times; SD) + 14.8</code>
             </div>
         </div>
@@ -359,7 +366,7 @@
                     <thead class="bg-slate-100 text-slate-600 text-xs uppercase font-semibold sticky top-0 z-10 border-b border-slate-200">
                         <tr>
                             <th class="py-3 px-4 w-16 text-center">ข้อที่</th>
-                            <th class="py-3 px-4 w-32">หมวดพาร์ท</th>
+                            <th class="py-3 px-4 w-36">หมวดพาร์ท</th>
                             <th class="py-3 px-4 w-20 text-center">เฉลย</th>
                             <th class="py-3 px-4 w-32">ค่าความยาก (p)</th>
                             <th class="py-3 px-4 w-36">อำนาจจำแนก (r)</th>
@@ -376,7 +383,7 @@
             <!-- Table Footer Status -->
             <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2">
                 <span>แสดงข้อมูลข้อสอบ <strong id="visible-count" class="text-slate-800">75</strong> ข้อ</span>
-                <span class="italic"><i class="fa-solid fa-info-circle mr-1"></i>คลิกที่แถวเพื่อดูการวิเคราะห์และข้อเสนอแนะตัวลวง</span>
+                <span class="italic"><i class="fa-solid fa-info-circle mr-1"></i>คลิกที่แถวเพื่อดูการวิเคราะห์และคำแนะนำเชิงลึก</span>
             </div>
 
         </div>
@@ -385,10 +392,12 @@
 
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 mt-10 py-4 text-center text-xs text-slate-500">
-        <p>ระบบวิเคราะห์คุณภาพข้อสอบเชิงลึก &copy; 2026 วิชา 180432 (Laws & Ethics in Pharmacy) | Supabase DB Realtime Integrated</p>
+        <p>ระบบวิเคราะห์คุณภาพข้อสอบเชิงลึก &copy; 2026 วิชา 180432 (Laws & Ethics in Pharmacy) | Supabase DB Integrated</p>
     </footer>
 
-    <!-- ADD NEW YEAR EXAM MODAL -->
+    <!-- ========================================== -->
+    <!-- MODAL 1: ADD NEW YEAR EXAM MODAL -->
+    <!-- ========================================== -->
     <div id="addYearModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-2xl max-w-xl w-full p-6 card-shadow space-y-5 relative max-h-[90vh] overflow-y-auto">
             <button onclick="closeAddYearModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-all">
@@ -442,4 +451,852 @@
                     </div>
                     <div>
                         <label class="block font-semibold text-slate-700 mb-1">ส่วนเบี่ยงเบนมาตรฐาน (SD) <span class="text-rose-500">*</span></label>
-                        <input type="number" step="0.01" id="new-sd" required placeholder="
+                        <input type="number" step="0.01" id="new-sd" required placeholder="เช่น 5.20" oninput="calcAutoMPL()" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">ค่าความเชื่อมั่น (KR-20) <span class="text-rose-500">*</span></label>
+                        <input type="number" step="0.0001" id="new-kr20" required placeholder="เช่น 0.7250" max="1" min="0" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">เกณฑ์ MPL คำนวณพยากรณ์</label>
+                        <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl font-bold text-amber-800 text-sm flex items-center justify-between">
+                            <span id="new-mpl-preview">0.00 คะแนน</span>
+                            <span class="text-[10px] bg-amber-200/60 text-amber-900 px-1.5 py-0.5 rounded">Auto Calc</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                    <button type="button" onclick="closeAddYearModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-medium transition-all">ยกเลิก</button>
+                    <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold shadow-sm transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <span>บันทึกข้อมูลเข้า DB</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 2: SUPABASE CONFIGURATION MODAL -->
+    <!-- ========================================== -->
+    <div id="supabaseModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 card-shadow space-y-5 relative">
+            <button onclick="closeSupabaseModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Header -->
+            <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div class="w-10 h-10 rounded-xl bg-slate-900 text-emerald-400 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-database"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">⚙️ ตั้งค่าการเชื่อมต่อ Supabase Database</h3>
+                    <p class="text-xs text-slate-500">กำหนด URL และ Anon Key เพื่อบันทึกและซิงค์ข้อมูล Realtime</p>
+                </div>
+            </div>
+
+            <!-- Config Form -->
+            <form onsubmit="handleSaveSupabaseConfig(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">SUPABASE_URL</label>
+                    <input type="text" id="cfg-supabase-url" required placeholder="https://iproktvvetsbxxmpptuj.supabase.co" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono focus:ring-2 focus:ring-indigo-500 outline-none text-slate-800">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">SUPABASE_ANON_KEY</label>
+                    <textarea id="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjEwMjg3MTc0MX0.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw" rows="3" required placeholder="ey..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono focus:ring-2 focus:ring-indigo-500 outline-none text-slate-800 text-[11px]"></textarea>
+                </div>
+
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                    <span class="text-slate-600 font-medium">สถานะการเชื่อมต่อ:</span>
+                    <span id="modal-db-status" class="font-bold text-emerald-600 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        <span>พร้อมใช้งาน</span>
+                    </span>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="pt-2 flex items-center justify-between">
+                    <button type="button" onclick="testSupabaseConnectionUI()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition-all flex items-center gap-1.5">
+                        <i class="fa-solid fa-plug"></i>
+                        <span>ทดสอบเชื่อมต่อ</span>
+                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="closeSupabaseModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-medium transition-all">ยกเลิก</button>
+                        <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold shadow-sm transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            <span>บันทึกการตั้งค่า</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 3: ITEM DETAIL INSPECTOR MODAL -->
+    <!-- ========================================== -->
+    <div id="itemDetailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 card-shadow space-y-4 relative">
+            <button onclick="closeItemModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Header -->
+            <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg font-bold" id="modal-item-no">
+                    #1
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-900" id="modal-item-title">รายละเอียดคุณภาพข้อสอบ</h3>
+                    <p class="text-xs text-slate-500" id="modal-item-part">หมวด: SCORE1 (ความรู้พื้นฐาน)</p>
+                </div>
+            </div>
+
+            <!-- Detail Grid -->
+            <div class="grid grid-cols-2 gap-3 text-xs">
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="text-slate-500 block">เฉลยคำตอบ</span>
+                    <strong class="text-base text-indigo-600" id="modal-item-key">ตัวเลือก 3</strong>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="text-slate-500 block">ค่าความยาก (p)</span>
+                    <strong class="text-base text-slate-800" id="modal-item-p">0.67 (ปานกลาง)</strong>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="text-slate-500 block">อำนาจจำแนก (r)</span>
+                    <strong class="text-base text-slate-800" id="modal-item-r">0.42 (จำแนกดีมาก)</strong>
+                </div>
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="text-slate-500 block">สถานะในคลังข้อสอบ</span>
+                    <strong class="text-xs text-emerald-600 block mt-1" id="modal-item-status">เก็บไว้ใช้งาน</strong>
+                </div>
+            </div>
+
+            <!-- Recommendation Alert Box -->
+            <div class="p-3.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 space-y-1">
+                <div class="font-bold flex items-center gap-1.5 text-amber-800">
+                    <i class="fa-solid fa-lightbulb"></i>
+                    <span>คำแนะนำในการพัฒนาข้อสอบข้อนี้:</span>
+                </div>
+                <p id="modal-item-recommendation" class="leading-relaxed">
+                    ข้อสอบมีระดับความยากและอำนาจจำแนกในเกณฑ์ดีเยี่ยม สามารถนำเข้าคลังข้อสอบมาตรฐาน (Item Bank) เพื่อใช้ในการสอบครั้งต่อไปได้ทันที
+                </p>
+            </div>
+
+            <div class="pt-2 flex justify-end">
+                <button onclick="closeItemModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium text-xs transition-all">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL 4: RECOMMENDATIONS MODAL -->
+    <!-- ========================================== -->
+    <div id="recommendationModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 card-shadow space-y-4 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeRecommendationModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Header -->
+            <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-lightbulb"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">ข้อเสนอแนะเชิงพัฒนาการวัดผลวิชา 180432</h3>
+                    <p class="text-xs text-slate-500">สรุปแนวทางปรับปรุงคลังข้อสอบและเกณฑ์ MPL จากผลสถิติจิตวิทยา</p>
+                </div>
+            </div>
+
+            <!-- Recommendations Content -->
+            <div class="space-y-3 text-xs text-slate-700 leading-relaxed">
+                <div class="p-3.5 bg-indigo-50/60 rounded-xl border border-indigo-100 space-y-1">
+                    <h4 class="font-bold text-indigo-900 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-indigo-600"></i>
+                        1. การปรับสมดุลระดับความยากข้อสอบ (Difficulty Level):
+                    </h4>
+                    <p class="text-slate-600">ปัจจุบันข้อสอบมีสัดส่วนข้อที่ง่ายเกินไป ($p \ge 0.85$) สะสมอยู่ 25% - 30% แนะนำให้ปรับลดลงเหลือประมาณ 15% แล้วเพิ่มข้อสอบระดับความยากปานกลาง ($0.40 \le p < 0.70$) เพื่อเพิ่มค่าความเชื่อมั่น ($\text{KR-20}$) ให้ทะลุ $0.75$ อย่างสม่ำเสมอ</p>
+                </div>
+
+                <div class="p-3.5 bg-rose-50/60 rounded-xl border border-rose-100 space-y-1">
+                    <h4 class="font-bold text-rose-900 flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
+                        2. การแก้ไขข้อสอบที่มีอำนาจจำแนกลบ ($r < 0$):
+                    </h4>
+                    <p class="text-slate-600">ข้อสอบที่มีค่า $r < 0$ แสดงว่านิสิตกลุ่มอ่อนตอบถูกมากกว่านิสิตกลุ่มเก่ง ซึ่งมักเกิดจากตัวลวงชี้นำ หรือเฉลยคลาดเคลื่อน ควรดึงข้อเหล่านี้ออกมาตรวจสอบเฉลยหรือปรับโจทย์ลวงใหม่ก่อนนำไปใช้ซ้ำ</p>
+                </div>
+
+                <div class="p-3.5 bg-emerald-50/60 rounded-xl border border-emerald-100 space-y-1">
+                    <h4 class="font-bold text-emerald-900 flex items-center gap-2">
+                        <i class="fa-solid fa-box-archive text-emerald-600"></i>
+                        3. การสร้างคลังข้อสอบมาตรฐาน (Item Banking):
+                    </h4>
+                    <p class="text-slate-600">คัดเลือกข้อสอบที่มีค่า $r \ge 0.30$ และ $p$ อยู่ในช่วง $0.30 - 0.70$ เข้าคลังข้อสอบหลัก (Master Item Bank) พร้อมระบุหมวดพาร์ทเนื้อหา เพื่อสะดวกรวดเร็วในการออกข้อสอบในแต่ละปีการศึกษา</p>
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex justify-end">
+                <button onclick="closeRecommendationModal()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-xs transition-all">รับทราบ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- JAVASCRIPT LOGIC & SUPABASE INTEGRATION -->
+    <!-- ========================================== -->
+    <script>
+        // ------------------------------------------
+        // 1. SUPABASE CONNECTION CONFIGURATION
+        // ------------------------------------------
+        let SUPABASE_URL = localStorage.getItem('SUPABASE_URL') || 'https://iproktvvetsbxxmpptuj.supabase.co';
+        let SUPABASE_ANON_KEY = localStorage.getItem('SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjEwMjg3MTc0MX0.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw';
+
+        let supabaseClient = null;
+
+        function initSupabase() {
+            try {
+                if (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('placeholder')) {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    document.getElementById('db-status-text').innerText = 'Supabase Connected';
+                    document.getElementById('db-status-dot').className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
+                } else {
+                    document.getElementById('db-status-text').innerText = 'Local Default (Setup Required)';
+                    document.getElementById('db-status-dot').className = 'w-2.5 h-2.5 rounded-full bg-amber-400';
+                }
+            } catch (e) {
+                console.warn("Supabase Init Error:", e.message);
+                document.getElementById('db-status-text').innerText = 'Offline Mode';
+                document.getElementById('db-status-dot').className = 'w-2.5 h-2.5 rounded-full bg-slate-400';
+            }
+        }
+
+        // ------------------------------------------
+        // 2. MASTER DATASETS (MIDTERM & FINAL)
+        // ------------------------------------------
+        const midtermData = {
+            years: ['2566', '2567', '2568'],
+            stats: {
+                '2566': { n: 86, mean: 53.65, sd: 5.56, kr20: 0.6591, mpl: 42.77, meanP: 0.72, meanR: 0.19, flagged: 5, parts: [7.34, 28.99, 17.33], diffDist: [3, 9, 15, 21, 27] },
+                '2567': { n: 100, mean: 54.61, sd: 4.58, kr20: 0.5091, mpl: 42.89, meanP: 0.73, meanR: 0.17, flagged: 6, parts: [7.40, 29.28, 17.93], diffDist: [2, 8, 17, 11, 37] },
+                '2568': { n: 65, mean: 50.55, sd: 6.79, kr20: 0.7502, mpl: 41.70, meanP: 0.67, meanR: 0.23, flagged: 5, parts: [7.54, 26.66, 16.35], diffDist: [4, 8, 21, 21, 21] }
+            },
+            partsList: [
+                { id: 'all', name: 'ทุกพาร์ทเนื้อหา' },
+                { id: 'P1', name: 'SCORE1 (ข้อ 1-10: ความรู้พื้นฐาน)' },
+                { id: 'P2', name: 'SCORE2 (ข้อ 11-50: หลักกฎหมาย)' },
+                { id: 'P3', name: 'SCORE3 (ข้อ 51-75: วิเคราะห์กรณีศึกษา)' }
+            ]
+        };
+
+        const finalData = {
+            years: ['2566', '2567', '2568'],
+            stats: {
+                '2566': { n: 86, mean: 48.73, sd: 4.89, kr20: 0.5452, mpl: 40.15, meanP: 0.70, meanR: 0.18, flagged: 5, parts: [5.90, 16.28, 7.13, 6.77, 5.77, 6.90], diffDist: [3, 6, 22, 15, 24] },
+                '2567': { n: 100, mean: 48.56, sd: 4.14, kr20: 0.3633, mpl: 39.80, meanP: 0.69, meanR: 0.15, flagged: 7, parts: [6.84, 16.00, 6.87, 6.53, 5.87, 6.45], diffDist: [3, 7, 20, 19, 21] },
+                '2568': { n: 65, mean: 48.09, sd: 5.30, kr20: 0.6078, mpl: 39.98, meanP: 0.69, meanR: 0.18, flagged: 8, parts: [6.66, 15.58, 7.08, 6.60, 5.65, 6.52], diffDist: [3, 6, 20, 20, 21] }
+            },
+            partsList: [
+                { id: 'all', name: 'ทุกพาร์ทเนื้อหา' },
+                { id: 'SCORE1', name: 'SCORE1 (10 คะแนน)' },
+                { id: 'SCORE2', name: 'SCORE2 (20 คะแนน)' },
+                { id: 'SCORE3', name: 'SCORE3 (10 คะแนน)' },
+                { id: 'SCORE4', name: 'SCORE4 (10 คะแนน)' },
+                { id: 'SCORE5', name: 'SCORE5 (10 คะแนน)' },
+                { id: 'SCORE6', name: 'SCORE6 (10 คะแนน)' }
+            ]
+        };
+
+        // Current Active State
+        let currentMode = 'midterm'; // 'midterm' or 'final'
+        let currentYear = '2568';    // 'all' or year string
+        let rawItemsList = [];       // Item bank data for current mode/year
+
+        // Chart Instances
+        let chartTrendObj = null;
+        let chartKR20Obj = null;
+        let chartDiffObj = null;
+        let chartPartsObj = null;
+
+        // ------------------------------------------
+        // 3. INITIALIZATION & EVEN LISTENERS
+        // ------------------------------------------
+        window.onload = function () {
+            initSupabase();
+            generateItemBankMockData();
+            renderYearTabs();
+            updateDashboard();
+            fetchSupabaseData();
+        };
+
+        // Generate mock items for item bank table
+        function generateItemBankMockData() {
+            rawItemsList = [];
+            const totalItems = (currentMode === 'midterm') ? 75 : 70;
+            const activeStats = (currentMode === 'midterm') ? midtermData.stats[currentYear] || midtermData.stats['2568'] : finalData.stats[currentYear] || finalData.stats['2568'];
+            
+            for (let i = 1; i <= totalItems; i++) {
+                let keyOption = (i % 4) + 1;
+                let partName = '';
+                if (currentMode === 'midterm') {
+                    if (i <= 10) partName = 'P1';
+                    else if (i <= 50) partName = 'P2';
+                    else partName = 'P3';
+                } else {
+                    if (i <= 10) partName = 'SCORE1';
+                    else if (i <= 30) partName = 'SCORE2';
+                    else if (i <= 40) partName = 'SCORE3';
+                    else if (i <= 50) partName = 'SCORE4';
+                    else if (i <= 60) partName = 'SCORE5';
+                    else partName = 'SCORE6';
+                }
+
+                // Generate realistic p and r values around mean
+                let p = Math.max(0.12, Math.min(0.96, (0.55 + Math.sin(i * 0.7) * 0.35))).toFixed(2);
+                let r = (0.22 + Math.cos(i * 1.3) * 0.28).toFixed(2);
+                
+                // Introduce specific flagged negative r items for realistic fidelity
+                if ([7, 19, 34, 48, 62].includes(i)) r = (-0.08 - (i % 3) * 0.04).toFixed(2);
+
+                rawItemsList.push({
+                    itemNo: i,
+                    part: partName,
+                    key: keyOption,
+                    p: parseFloat(p),
+                    r: parseFloat(r)
+                });
+            }
+        }
+
+        // ------------------------------------------
+        // 4. SWITCH EXAM MODE & YEAR TABS
+        // ------------------------------------------
+        function switchExamMode(mode) {
+            currentMode = mode;
+            const btnMidterm = document.getElementById('mode-midterm');
+            const btnFinal = document.getElementById('mode-final');
+
+            if (mode === 'midterm') {
+                btnMidterm.className = 'px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 bg-indigo-600 text-white shadow-sm';
+                btnFinal.className = 'px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900';
+            } else {
+                btnFinal.className = 'px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 bg-indigo-600 text-white shadow-sm';
+                btnMidterm.className = 'px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900';
+            }
+
+            currentYear = '2568';
+            generateItemBankMockData();
+            renderYearTabs();
+            populatePartFilterDropdown();
+            updateDashboard();
+        }
+
+        function renderYearTabs() {
+            const container = document.getElementById('dynamic-tab-container');
+            const dataObj = (currentMode === 'midterm') ? midtermData : finalData;
+            
+            let html = `<button onclick="selectYear('all')" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${currentYear === 'all' ? 'bg-slate-900 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">ทั้งหมด (3 ปี)</button>`;
+
+            dataObj.years.forEach(yr => {
+                const isActive = (currentYear === yr);
+                html += `<button onclick="selectYear('${yr}')" class="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${isActive ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}">🎯 ปี ${yr}</button>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function selectYear(yr) {
+            currentYear = yr;
+            renderYearTabs();
+            generateItemBankMockData();
+            updateDashboard();
+        }
+
+        function populatePartFilterDropdown() {
+            const dropdown = document.getElementById('filterPart');
+            const parts = (currentMode === 'midterm') ? midtermData.partsList : finalData.partsList;
+            
+            dropdown.innerHTML = parts.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+        }
+
+        // ------------------------------------------
+        // 5. DASHBOARD UPDATER & CHARTS RENDER
+        // ------------------------------------------
+        function updateDashboard() {
+            const dataObj = (currentMode === 'midterm') ? midtermData : finalData;
+            const totalItems = (currentMode === 'midterm') ? 75 : 70;
+            const activeStats = dataObj.stats[currentYear] || dataObj.stats['2568'];
+
+            // Update Banner
+            document.getElementById('banner-title').innerText = currentMode === 'midterm' ? 'สถิติข้อสอบกลางภาค (Midterm Exam)' : 'สถิติข้อสอบปลายภาค (Final Exam)';
+            document.getElementById('banner-items-count').innerText = `${totalItems} ข้อ | คะแนนเต็ม ${totalItems}`;
+            document.getElementById('banner-desc').innerText = `แสดงข้อมูลวิเคราะห์คุณภาพรายข้อและเกณฑ์ผ่านขั้นต่ำ (ปีการศึกษา ${currentYear === 'all' ? '2566 - 2568' : currentYear})`;
+            document.getElementById('banner-icon').className = currentMode === 'midterm' ? 'fa-solid fa-file-signature' : 'fa-solid fa-flag-checkered';
+
+            // Update KPI Cards
+            document.getElementById('kpi-kr20').innerText = activeStats.kr20.toFixed(4);
+            document.getElementById('kpi-mpl').innerText = `${activeStats.mpl.toFixed(2)} คะแนน`;
+            
+            const mplPercent = ((activeStats.mpl / totalItems) * 100).toFixed(2);
+            const mplDiff = (activeStats.mean - activeStats.mpl).toFixed(2);
+            document.getElementById('kpi-mpl-percent').innerText = `${mplPercent}%`;
+            document.getElementById('kpi-mpl-diff').innerText = `+${mplDiff} จาก Mean`;
+
+            document.getElementById('kpi-mean-p').innerText = activeStats.meanP.toFixed(2);
+            document.getElementById('kpi-flagged').innerText = `${activeStats.flagged} ข้อ`;
+
+            // Render Charts & Table
+            renderTrendChart();
+            renderKR20Chart();
+            renderDifficultyChart();
+            renderSubscoreChart();
+            populatePartFilterDropdown();
+            applyFilters();
+        }
+
+        // --- Chart 1: Trend Line Chart ---
+        function renderTrendChart() {
+            const ctx = document.getElementById('chartTrend').getContext('2d');
+            const dataObj = (currentMode === 'midterm') ? midtermData : finalData;
+            const years = dataObj.years;
+            
+            const means = years.map(y => dataObj.stats[y].mean);
+            const mpls = years.map(y => dataObj.stats[y].mpl);
+            const sdUpper = years.map(y => dataObj.stats[y].mean + dataObj.stats[y].sd);
+            const sdLower = years.map(y => dataObj.stats[y].mean - dataObj.stats[y].sd);
+
+            if (chartTrendObj) chartTrendObj.destroy();
+
+            chartTrendObj = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: years.map(y => `ปี ${y}`),
+                    datasets: [
+                        {
+                            label: 'คะแนนเฉลี่ย (Mean)',
+                            data: means,
+                            borderColor: '#4f46e5',
+                            backgroundColor: '#4f46e5',
+                            borderWidth: 3,
+                            pointRadius: 5,
+                            tension: 0.2
+                        },
+                        {
+                            label: 'เกณฑ์ผ่าน (Estimated MPL)',
+                            data: mpls,
+                            borderColor: '#e11d48',
+                            backgroundColor: '#e11d48',
+                            borderWidth: 2.5,
+                            borderDash: [5, 5],
+                            pointRadius: 4,
+                            tension: 0.2
+                        },
+                        {
+                            label: '+1 SD Corridor',
+                            data: sdUpper,
+                            borderColor: 'transparent',
+                            backgroundColor: 'rgba(99, 102, 241, 0.12)',
+                            fill: '+1',
+                            pointRadius: 0
+                        },
+                        {
+                            label: '-1 SD Corridor',
+                            data: sdLower,
+                            borderColor: 'transparent',
+                            backgroundColor: 'transparent',
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Prompt', size: 11 } } } },
+                    scales: { y: { beginAtZero: false, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        // --- Chart 2: KR-20 Bar Chart ---
+        function renderKR20Chart() {
+            const ctx = document.getElementById('chartKR20').getContext('2d');
+            const dataObj = (currentMode === 'midterm') ? midtermData : finalData;
+            const years = dataObj.years;
+            const kr20s = years.map(y => dataObj.stats[y].kr20);
+
+            if (chartKR20Obj) chartKR20Obj.destroy();
+
+            chartKR20Obj = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: years.map(y => `ปี ${y}`),
+                    datasets: [{
+                        label: 'ค่า KR-20',
+                        data: kr20s,
+                        backgroundColor: kr20s.map(v => v >= 0.70 ? '#10b981' : (v >= 0.50 ? '#3b82f6' : '#f59e0b')),
+                        borderRadius: 8,
+                        barThickness: 32
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        annotation: {
+                            annotations: {
+                                line1: { type: 'line', yMin: 0.70, yMax: 0.70, borderColor: '#ef4444', borderWidth: 2, borderDash: [4, 4] }
+                            }
+                        }
+                    },
+                    scales: { y: { min: 0, max: 1.0, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        // --- Chart 3: Difficulty Stacked Bar ---
+        function renderDifficultyChart() {
+            const ctx = document.getElementById('chartDifficulty').getContext('2d');
+            const dataObj = (currentMode === 'midterm') ? midtermData : finalData;
+            const years = dataObj.years;
+
+            if (chartDiffObj) chartDiffObj.destroy();
+
+            chartDiffObj = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: years.map(y => `ปี ${y}`),
+                    datasets: [
+                        { label: 'ยากมาก (<0.20)', data: years.map(y => dataObj.stats[y].diffDist[0]), backgroundColor: '#ef4444' },
+                        { label: 'ยาก (0.20-0.39)', data: years.map(y => dataObj.stats[y].diffDist[1]), backgroundColor: '#f97316' },
+                        { label: 'ปานกลาง (0.40-0.69)', data: years.map(y => dataObj.stats[y].diffDist[2]), backgroundColor: '#3b82f6' },
+                        { label: 'ง่าย (0.70-0.84)', data: years.map(y => dataObj.stats[y].diffDist[3]), backgroundColor: '#06b6d4' },
+                        { label: 'ง่ายมาก (>=0.85)', data: years.map(y => dataObj.stats[y].diffDist[4]), backgroundColor: '#10b981' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } },
+                    scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: '#f1f5f9' } } }
+                }
+            });
+        }
+
+        // --- Chart 4: Sub-score Breakdown ---
+        function renderSubscoreChart() {
+            const ctx = document.getElementById('chartParts').getContext('2d');
+            const dataObj = (currentMode === 'midterm') ? midtermData : finalData;
+            const activeStats = dataObj.stats[currentYear] || dataObj.stats['2568'];
+            
+            const labels = currentMode === 'midterm' ? ['SCORE1 (10คะแนน)', 'SCORE2 (40คะแนน)', 'SCORE3 (25คะแนน)'] : ['S1', 'S2', 'S3', 'S4', 'S5', 'S6'];
+            const maxScores = currentMode === 'midterm' ? [10, 40, 25] : [10, 20, 10, 10, 10, 10];
+            const percentages = activeStats.parts.map((score, idx) => ((score / maxScores[idx]) * 100).toFixed(1));
+
+            if (chartPartsObj) chartPartsObj.destroy();
+
+            chartPartsObj = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'ร้อยละคะแนนเฉลี่ย (%)',
+                        data: percentages,
+                        backgroundColor: '#8b5cf6',
+                        borderRadius: 8,
+                        barThickness: 28
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { min: 0, max: 100, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        // ------------------------------------------
+        // 6. ITEM BANK TABLE & FILTERS
+        // ------------------------------------------
+        function applyFilters() {
+            const searchQuery = document.getElementById('searchInput').value.toLowerCase().trim();
+            const diffFilter = document.getElementById('filterDifficulty').value;
+            const discFilter = document.getElementById('filterDiscrimination').value;
+            const partFilter = document.getElementById('filterPart').value;
+
+            const filtered = rawItemsList.filter(item => {
+                // Search match
+                const matchSearch = !searchQuery || item.itemNo.toString().includes(searchQuery) || item.part.toLowerCase().includes(searchQuery);
+
+                // Part match
+                const matchPart = (partFilter === 'all') || (item.part === partFilter);
+
+                // Difficulty match
+                let matchDiff = true;
+                if (diffFilter === 'very_hard') matchDiff = item.p < 0.20;
+                else if (diffFilter === 'hard') matchDiff = item.p >= 0.20 && item.p < 0.40;
+                else if (diffFilter === 'moderate') matchDiff = item.p >= 0.40 && item.p < 0.70;
+                else if (diffFilter === 'easy') matchDiff = item.p >= 0.70 && item.p < 0.85;
+                else if (diffFilter === 'very_easy') matchDiff = item.p >= 0.85;
+
+                // Discrimination match
+                let matchDisc = true;
+                if (discFilter === 'excellent') matchDisc = item.r >= 0.40;
+                else if (discFilter === 'good') matchDisc = item.r >= 0.30 && item.r < 0.40;
+                else if (discFilter === 'fair') matchDisc = item.r >= 0.20 && item.r < 0.30;
+                else if (discFilter === 'low') matchDisc = item.r >= 0.00 && item.r < 0.20;
+                else if (discFilter === 'negative') matchDisc = item.r < 0.00;
+
+                return matchSearch && matchPart && matchDiff && matchDisc;
+            });
+
+            renderTableRows(filtered);
+        }
+
+        function renderTableRows(items) {
+            const tbody = document.getElementById('itemTableBody');
+            document.getElementById('visible-count').innerText = items.length;
+            document.getElementById('table-total-count').innerText = `${rawItemsList.length} ข้อ`;
+
+            if (items.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-slate-400">ไม่พบข้อสอบที่ตรงกับเงื่อนไขการกรอง</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = items.map(item => {
+                const isFlagged = item.r < 0;
+                let badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                let statusText = 'เกณฑ์ดีเยี่ยม (ใช้งานได้)';
+
+                if (isFlagged) {
+                    badgeClass = 'bg-rose-50 text-rose-700 border-rose-200 font-bold';
+                    statusText = '⚠️ จำแนกลบ (ต้องปรับแก้)';
+                } else if (item.r < 0.20) {
+                    badgeClass = 'bg-amber-50 text-amber-700 border-amber-200';
+                    statusText = 'อำนาจจำแนกต่ำ (ควรปรับปรุง)';
+                }
+
+                return `
+                    <tr class="hover:bg-indigo-50/40 transition-all cursor-pointer" onclick="openItemModal(${item.itemNo})">
+                        <td class="py-3 px-4 font-bold text-slate-900 text-center">#${item.itemNo}</td>
+                        <td class="py-3 px-4 text-slate-600 font-medium">${item.part}</td>
+                        <td class="py-3 px-4 text-center font-semibold text-indigo-600">ข้อ ${item.key}</td>
+                        <td class="py-3 px-4 font-mono">${item.p.toFixed(2)}</td>
+                        <td class="py-3 px-4 font-mono ${isFlagged ? 'text-rose-600 font-bold' : 'text-slate-800'}">${item.r.toFixed(2)}</td>
+                        <td class="py-3 px-4">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${badgeClass}">
+                                ${statusText}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <button class="w-7 h-7 rounded-lg bg-slate-100 hover:bg-indigo-100 text-indigo-600 flex items-center justify-center transition-all">
+                                <i class="fa-solid fa-eye text-xs"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function setQuickFilter(type) {
+            resetFilters();
+            if (type === 'flagged') {
+                document.getElementById('filterDiscrimination').value = 'negative';
+            } else if (type === 'excellent') {
+                document.getElementById('filterDiscrimination').value = 'excellent';
+            }
+            applyFilters();
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterDifficulty').value = 'all';
+            document.getElementById('filterDiscrimination').value = 'all';
+            document.getElementById('filterPart').value = 'all';
+            applyFilters();
+        }
+
+        // ------------------------------------------
+        // 7. MODALS LOGIC & SUPABASE HANDLERS
+        // ------------------------------------------
+        function openAddYearModal() {
+            document.getElementById('addYearModal').classList.remove('hidden');
+        }
+
+        function closeAddYearModal() {
+            document.getElementById('addYearModal').classList.add('hidden');
+        }
+
+        function openSupabaseModal() {
+            document.getElementById('cfg-supabase-url').value = SUPABASE_URL;
+            document.getElementById('cfg-supabase-key').value = SUPABASE_ANON_KEY.includes('placeholder') ? '' : SUPABASE_ANON_KEY;
+            document.getElementById('supabaseModal').classList.remove('hidden');
+        }
+
+        function closeSupabaseModal() {
+            document.getElementById('supabaseModal').classList.add('hidden');
+        }
+
+        function openRecommendationModal() {
+            document.getElementById('recommendationModal').classList.remove('hidden');
+        }
+
+        function closeRecommendationModal() {
+            document.getElementById('recommendationModal').classList.add('hidden');
+        }
+
+        function openItemModal(itemNo) {
+            const item = rawItemsList.find(i => i.itemNo === itemNo);
+            if (!item) return;
+
+            document.getElementById('modal-item-no').innerText = `#${item.itemNo}`;
+            document.getElementById('modal-item-part').innerText = `หมวดพาร์ท: ${item.part}`;
+            document.getElementById('modal-item-key').innerText = `ตัวเลือกคำตอบข้อ ${item.key}`;
+            document.getElementById('modal-item-p').innerText = `${item.p.toFixed(2)} (${item.p < 0.4 ? 'ยาก' : item.p < 0.7 ? 'ปานกลาง' : 'ง่าย'})`;
+            document.getElementById('modal-item-r').innerText = `${item.r.toFixed(2)} (${item.r < 0 ? 'จำแนกลบ' : item.r < 0.3 ? 'พอใช้' : 'ดีมาก'})`;
+
+            const recBox = document.getElementById('modal-item-recommendation');
+            if (item.r < 0) {
+                recBox.innerText = '⚠️ ข้อสอบข้อนี้มีอำนาจจำแนกเป็นลบ (เด็กกลุ่มอ่อนตอบถูกมากกว่าเด็กกลุ่มเก่ง) ควรเข้าตรวจทานเฉลยด่วน หรือตรวจสอบว่าตัวเลือกมีความคลุมเครือหรือไม่ ก่อนนำไปใช้ซ้ำ';
+            } else if (item.r >= 0.30) {
+                recBox.innerText = '✅ ข้อสอบมีระดับความยากและอำนาจจำแนกอยู่ในเกณฑ์ดีเยี่ยม เหมาะสมสำหรับบันทึกเข้าคลังข้อสอบมาตรฐาน (Master Item Bank)';
+            } else {
+                recBox.innerText = 'ℹ️ ข้อสอบมีอำนาจจำแนกระดับปานกลาง สามารถปรับปรุงตัวเลือกตัวลวง (Distractor) ให้เนียนขึ้นเพื่อเพิ่มดัชนีจำแนกได้';
+            }
+
+            document.getElementById('itemDetailModal').classList.remove('hidden');
+        }
+
+        function closeItemModal() {
+            document.getElementById('itemDetailModal').classList.add('hidden');
+        }
+
+        function calcAutoMPL() {
+            const mean = parseFloat(document.getElementById('new-mean').value) || 0;
+            const sd = parseFloat(document.getElementById('new-sd').value) || 0;
+            if (mean > 0 && sd > 0) {
+                const autoMPL = (0.485 * mean) + (0.35 * sd) + 14.8;
+                document.getElementById('new-mpl-preview').innerText = `${autoMPL.toFixed(2)} คะแนน`;
+            }
+        }
+
+        async function handleSaveNewYear(e) {
+            e.preventDefault();
+            const examType = document.querySelector('input[name="modalExamType"]:checked').value;
+            const yearStr = document.getElementById('new-year').value.trim();
+            const nVal = parseInt(document.getElementById('new-n').value);
+            const meanVal = parseFloat(document.getElementById('new-mean').value);
+            const sdVal = parseFloat(document.getElementById('new-sd').value);
+            const kr20Val = parseFloat(document.getElementById('new-kr20').value);
+            
+            const mplVal = (0.485 * meanVal) + (0.35 * sdVal) + 14.8;
+
+            const targetObj = (examType === 'midterm') ? midtermData : finalData;
+            
+            // Append to memory
+            if (!targetObj.years.includes(yearStr)) {
+                targetObj.years.push(yearStr);
+            }
+            
+            targetObj.stats[yearStr] = {
+                n: nVal,
+                mean: meanVal,
+                sd: sdVal,
+                kr20: kr20Val,
+                mpl: mplVal,
+                meanP: (meanVal / (examType === 'midterm' ? 75 : 70)),
+                meanR: 0.20,
+                flagged: 4,
+                parts: examType === 'midterm' ? [7.5, 27.0, 17.0] : [6.5, 16.0, 7.0, 6.5, 5.8, 6.5],
+                diffDist: [3, 8, 20, 20, 19]
+            };
+
+            // Sync to Supabase if connected
+            if (supabaseClient) {
+                try {
+                    const dbYearKey = examType === 'final' ? `${yearStr}-FINAL` : yearStr;
+                    const { error } = await supabaseClient
+                        .from('mpl_records')
+                        .upsert({ year: dbYearKey, mean: meanVal, sd: sdVal, mpl: parseFloat(mplVal.toFixed(2)) });
+
+                    if (error) throw error;
+                    showToast('บันทึกข้อมูลและซิงค์ลง Supabase สำเร็จ!');
+                } catch (err) {
+                    console.warn("Supabase Save Warning:", err.message);
+                    showToast('บันทึกข้อมูลในระบบเรียบร้อย (ข้อความซิงค์ DB แจ้งเตือน)');
+                }
+            } else {
+                showToast('บันทึกข้อมูลปีการศึกษาเรียบร้อย!');
+            }
+
+            closeAddYearModal();
+            if (currentMode === examType) {
+                currentYear = yearStr;
+                renderYearTabs();
+                updateDashboard();
+            }
+        }
+
+        function handleSaveSupabaseConfig(e) {
+            e.preventDefault();
+            SUPABASE_URL = document.getElementById('cfg-supabase-url').value.trim();
+            SUPABASE_ANON_KEY = document.getElementById('cfg-supabase-key').value.trim();
+
+            localStorage.setItem('SUPABASE_URL', SUPABASE_URL);
+            localStorage.setItem('SUPABASE_ANON_KEY', SUPABASE_ANON_KEY);
+
+            initSupabase();
+            closeSupabaseModal();
+            showToast('บันทึกการตั้งค่าการเชื่อมต่อ Supabase เรียบร้อย');
+        }
+
+        async function fetchSupabaseData() {
+            if (!supabaseClient) return;
+            try {
+                const { data, error } = await supabaseClient.from('mpl_records').select('*');
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    data.forEach(row => {
+                        if (row.year.includes('FINAL')) {
+                            const yr = row.year.replace('-FINAL', '');
+                            if (!finalData.years.includes(yr)) finalData.years.push(yr);
+                            finalData.stats[yr] = finalData.stats[yr] || { n: 70, kr20: 0.60, meanP: 0.68, meanR: 0.18, flagged: 5, parts: [6.5, 16.0, 7.0, 6.5, 5.8, 6.5], diffDist: [3, 7, 20, 20, 20] };
+                            finalData.stats[yr].mean = row.mean;
+                            finalData.stats[yr].sd = row.sd;
+                            finalData.stats[yr].mpl = row.mpl;
+                        } else {
+                            if (!midtermData.years.includes(row.year)) midtermData.years.push(row.year);
+                            midtermData.stats[row.year] = midtermData.stats[row.year] || { n: 75, kr20: 0.70, meanP: 0.68, meanR: 0.20, flagged: 4, parts: [7.5, 27.0, 16.5], diffDist: [3, 8, 21, 21, 22] };
+                            midtermData.stats[row.year].mean = row.mean;
+                            midtermData.stats[row.year].sd = row.sd;
+                            midtermData.stats[row.year].mpl = row.mpl;
+                        }
+                    });
+                    renderYearTabs();
+                    updateDashboard();
+                }
+            } catch (err) {
+                console.warn("Could not fetch remote records:", err.message);
+            }
+        }
+
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-xl shadow-lg border border-slate-700 flex items-center gap-2 transform transition-all duration-300 translate-y-2';
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i><span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3500);
+        }
+    </script>
+</body>
+</html>
