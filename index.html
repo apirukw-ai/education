@@ -203,7 +203,7 @@
                     <i class="fa-solid fa-flag-checkered"></i>
                 </div>
                 <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider" id="kpi-latest-year-title">เกณฑ์ MPL ปีล่าสุด (พ.ศ. 2568)</div>
-                <div id="kpi-latest-mpl" class="text-3xl font-extrabold text-amber-600 mt-2">--</div>
+                <div id="kpi-latest-mpl" class="text-3xl font-extrabold text-amber-600 mt-2">51.79</div>
                 <div class="flex items-center gap-1.5 mt-2 text-xs" id="kpi-mpl-yoy-wrapper">
                     <!-- YoY change badge -->
                 </div>
@@ -301,27 +301,27 @@
                             วิเคราะห์ Modified Cohen ($0.65 \times P_{90}$)
                         </div>
                         <p class="text-xs leading-relaxed text-slate-600">
-                            การตั้งเกณฑ์ผ่านด้วยวิธี **Modified Cohen ($0.65 \times P_{90}$)** ช่วยปรับเกณฑ์ขั้นต่ำตามระดับความยากง่ายของข้อสอบในแต่ละปี โดยใช้ $P_{90}$ เป็นดัชนีสะท้อนความสามารถของผู้สอบกลุ่มหัวกะทิ ตัดปัญหา Outlier จากเด็กเก่งสุด 5% แรก
+                            การตั้งเกณฑ์ผ่านด้วยวิธี **Modified Cohen ($0.65 \times P_{90}$)** ช่วยปรับเกณฑ์ขั้นต่ำตามระดับความยากง่ายของข้อสอบในแต่ละปี โดยค่า MPL อยู่ในช่วง **46.81 (ต่ำสุดปี 2563)** ถึง **52.71 (สูงสุดปี 2566)**
                         </p>
                     </div>
 
                     <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
                         <div class="font-semibold text-slate-800 flex items-center gap-2">
                             <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                            เสถียรภาพของ Mean & P90 ยุคใหม่ (2565-2568)
+                            เสถียรภาพของ Mean & P90 (2565-2568)
                         </div>
                         <p class="text-xs leading-relaxed text-slate-600">
-                            ผลสอบในช่วง 4 ปีหลังสุด (2565 - 2568) คะแนนเฉลี่ย (Mean) ทรงตัวอยู่ในระดับสูงระหว่าง **69.41 - 71.76 คะแนน** และค่า $P_{90}$ อยู่ในช่วง **75.20 - 77.00 คะแนน** ส่งผลให้เกณฑ์ MPL เกิน 48 คะแนนต่อเนื่อง
+                            ผลสอบในช่วง 4 ปีหลังสุด (2565 - 2568) คะแนนเฉลี่ย (Mean) ทรงตัวอยู่ในระดับสูง **69.41 - 71.76 คะแนน** และค่า $P_{90}$ อยู่ในช่วง **78.20 - 81.09 คะแนน** ส่งผลให้เกณฑ์ MPL ยืนเหนือระดับ 50 คะแนนต่อเนื่อง
                         </p>
                     </div>
 
                     <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
                         <div class="font-semibold text-slate-800 flex items-center gap-2">
                             <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-                            เปรียบเทียบกับ Empirical Regression
+                            ความสัมพันธ์เชิงสถิติตามข้อมูลจริง
                         </div>
                         <p class="text-xs leading-relaxed text-slate-600">
-                            เกณฑ์จากวิธี Modified Cohen ($0.65 \times P_{90}$) และ Empirical Regression ให้ค่าสอดคล้องกันอย่างใกล้ชิด สะท้อนถึงมาตรฐานระดับความยากของข้อสอบวิชา 180432 ที่มีความสม่ำเสมอสูง
+                            ค่า $P_{90}$ ย้อนหลังจริงอยู่ในช่วง **72.02 - 81.09 คะแนน** ซึ่งสะท้อนศักยภาพของนิสิตกลุ่ม Top 10% และเมื่อนำมาคำนวณ $0.65 \times P_{90}$ ให้ค่าตรงกับเกณฑ์ MPL ที่ใช้ตัดผ่านจริงทุกประการ
                         </p>
                     </div>
 
@@ -351,22 +351,22 @@
                 <div class="space-y-3 bg-slate-800/90 p-4 rounded-xl border border-slate-700">
                     <div>
                         <label class="block text-xs font-medium text-slate-300 mb-1">คาดการณ์คะแนน Percentile 90 ($P_{90}$)</label>
-                        <input type="number" id="sim-p90" value="75.0" step="0.1" oninput="calculateEstimatedMPL()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-bold text-amber-400 focus:outline-none focus:border-amber-500">
+                        <input type="number" id="sim-p90" value="79.68" step="0.01" oninput="calculateEstimatedMPL()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-bold text-amber-400 focus:outline-none focus:border-amber-500">
                     </div>
                     <div class="grid grid-cols-2 gap-2 pt-1">
                         <div>
                             <label class="block text-[11px] font-medium text-slate-400 mb-1">Mean (เสริม)</label>
-                            <input type="number" id="sim-mean" value="69.5" step="0.1" oninput="calcP90FromStats()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-blue-300">
+                            <input type="number" id="sim-mean" value="69.41" step="0.01" oninput="calcP90FromStats()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-blue-300">
                         </div>
                         <div>
                             <label class="block text-[11px] font-medium text-slate-400 mb-1">SD (เสริม)</label>
-                            <input type="number" id="sim-sd" value="5.5" step="0.1" oninput="calcP90FromStats()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-purple-300">
+                            <input type="number" id="sim-sd" value="5.81" step="0.01" oninput="calcP90FromStats()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-purple-300">
                         </div>
                     </div>
 
                     <div class="pt-2 border-t border-slate-700/80">
                         <div class="text-xs text-slate-400">ประมาณการเกณฑ์ MPL ที่คำนวณได้:</div>
-                        <div id="sim-result-mpl" class="text-3xl font-black text-amber-400 mt-1">48.75</div>
+                        <div id="sim-result-mpl" class="text-3xl font-black text-amber-400 mt-1">51.79</div>
                         <div class="text-[11px] text-amber-300/80 mt-1" id="sim-method-text">* Modified Cohen Method: 0.65 &times; P90</div>
                     </div>
                 </div>
@@ -386,7 +386,7 @@
                         <i class="fa-solid fa-table text-medical-600"></i>
                         ตารางจัดการและสรุปข้อมูลสถิติรายปี (Historical Statistics Table)
                     </h3>
-                    <p class="text-xs text-slate-500">แสดงรายการข้อมูลสถิติ $P_{90}$, Mean, SD และคำนวณเกณฑ์ผ่าน MPL ย้อนหลัง</p>
+                    <p class="text-xs text-slate-500">แสดงรายการข้อมูลสถิติ $P_{90}$, Mean, SD และคำนวณเกณฑ์ผ่าน MPL ย้อนหลัง (2561-2568)</p>
                 </div>
                 <div class="flex items-center gap-3 w-full sm:w-auto">
                     <div class="relative w-full sm:w-48">
@@ -463,7 +463,7 @@
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-1">คะแนน Percentile 90 ($P_{90}$) <span class="text-red-500">*</span></label>
-                    <input type="number" id="input-p90" required step="0.01" min="0" max="100" placeholder="75.20" oninput="updateModalMPLPreview()" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-amber-700 bg-amber-50/50 border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <input type="number" id="input-p90" required step="0.01" min="0" max="100" placeholder="79.68" oninput="updateModalMPLPreview()" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-amber-700 bg-amber-50/50 border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
                 </div>
 
                 <!-- Live Auto Calculated Preview -->
@@ -473,7 +473,7 @@
                 </div>
 
                 <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
-                    <button type="button" onclick="closeAddYearModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
+                    <button type="button" onclick="closeAddModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
                         ยกเลิก
                     </button>
                     <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition shadow-md">
@@ -509,7 +509,7 @@
     <script>
         // --- Supabase Client Config ---
         const SUPABASE_URL = 'https://iproktvvetsbxxmpptuj.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjEwMjg3MTc0MX0.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjA1NTk0MTQzN30.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw';
         let supabaseClient = null;
 
         try {
@@ -520,16 +520,16 @@
             console.warn('Supabase initialization warning:', err.message);
         }
 
-        // Master Historical Dataset (2561 - 2568) with Accurate P90 Values
+        // Master Historical Dataset (2561 - 2568) with Exact User Figures
         const defaultMasterData = [
-            { year: '2561', mean: 64.64, sd: 4.66, p90: 70.50 },
-            { year: '2562', mean: 64.63, sd: 5.71, p90: 71.20 },
-            { year: '2563', mean: 60.94, sd: 6.54, p90: 68.50 },
-            { year: '2564', mean: 63.74, sd: 6.82, p90: 71.80 },
-            { year: '2565', mean: 71.76, sd: 4.97, p90: 77.00 },
-            { year: '2566', mean: 70.64, sd: 5.46, p90: 76.50 },
-            { year: '2567', mean: 70.13, sd: 4.75, p90: 75.80 },
-            { year: '2568', mean: 69.41, sd: 5.81, p90: 75.20 }
+            { year: '2561', mean: 64.64, sd: 4.66, p90: 73.83, mpl: 47.99 },
+            { year: '2562', mean: 64.63, sd: 5.71, p90: 73.46, mpl: 47.75 },
+            { year: '2563', mean: 60.94, sd: 6.54, p90: 72.02, mpl: 46.81 },
+            { year: '2564', mean: 63.74, sd: 6.82, p90: 76.86, mpl: 49.96 },
+            { year: '2565', mean: 71.76, sd: 4.97, p90: 80.66, mpl: 52.43 },
+            { year: '2566', mean: 70.64, sd: 5.46, p90: 81.09, mpl: 52.71 },
+            { year: '2567', mean: 70.13, sd: 4.75, p90: 78.20, mpl: 50.83 },
+            { year: '2568', mean: 69.41, sd: 5.81, p90: 79.68, mpl: 51.79 }
         ];
 
         // Global Active State
@@ -546,6 +546,7 @@
             if (!item) return 0;
             if (formula === 'cohen') {
                 // PRIMARY FORMULA: Modified Cohen Method (0.65 * P90)
+                if (item.mpl && formula === currentFormula) return parseFloat(item.mpl.toFixed(2));
                 const p90 = item.p90 || (item.mean + 1.28 * item.sd);
                 return parseFloat((0.65 * p90).toFixed(2));
             } else {
@@ -576,7 +577,7 @@
                             mean: parseFloat(d.mean),
                             sd: parseFloat(d.sd),
                             p90: d.p90 ? parseFloat(d.p90) : parseFloat((d.mean + 1.28 * d.sd).toFixed(2)),
-                            mpl: d.mpl ? parseFloat(d.mpl) : null
+                            mpl: d.mpl ? parseFloat(d.mpl) : parseFloat((0.65 * (d.p90 || (d.mean + 1.28 * d.sd))).toFixed(2))
                         }));
                     } else {
                         masterData = JSON.parse(JSON.stringify(defaultMasterData));
@@ -797,7 +798,7 @@
                     scales: {
                         y: {
                             min: 0,
-                            max: 85,
+                            max: 90,
                             grid: { color: '#f1f5f9' },
                             ticks: { font: { family: 'Prompt', size: 11 } }
                         },
@@ -1006,7 +1007,7 @@
                 showToast(`เพิ่มข้อมูลปี พ.ศ. ${yearVal} เรียบร้อยแล้ว`, 'success');
             }
 
-            closeAddYearModal();
+            closeAddModal();
             await loadInitialData();
         }
 
@@ -1064,7 +1065,7 @@
             const sd = parseFloat(document.getElementById('sim-sd').value) || 0;
             if (mean > 0) {
                 const p90 = mean + (1.28 * sd);
-                document.getElementById('sim-p90').value = p90.toFixed(1);
+                document.getElementById('sim-p90').value = p90.toFixed(2);
             }
             calculateEstimatedMPL();
         }
