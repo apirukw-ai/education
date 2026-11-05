@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบวิเคราะห์คุณภาพข้อสอบรายข้อ & ดัชนีทางจิตวิทยาการวัดผล (Item Analysis Dashboard)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Prompt & Sarabun -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'Sarabun', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f3ff',
+                            100: '#e0e7ff',
+                            500: '#4f46e5',
+                            600: '#4338ca',
+                            700: '#3730a3',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; }
+        .card-shadow { box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05); }
+        .glass-header { background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(10px); }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+    <!-- Top Navigation & Header Bar -->
+    <header class="sticky top-0 z-30 glass-header border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center space-x-3">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-800 text-white flex items-center justify-center shadow-md">
+                    <i class="fa-solid fa-brain text-2xl"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <h1 class="text-lg font-bold text-slate-900 leading-tight">ระบบวิเคราะห์คุณภาพข้อสอบรายข้อ & ดัชนีทางจิตวิทยาการวัดผล</h1>
+                        <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-indigo-200">วิชา 180432</span>
+                    </div>
+                    <p class="text-xs text-slate-500">Item Analysis Dashboard & Psychometric Assessment (Laws & Ethics in Pharmacy)</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons Navigation -->
+            <div class="flex items-center gap-2.5 flex-wrap">
+                <!-- Navigation back to MPL Trend Dashboard -->
+                <a href="index.html" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-700 hover:to-emerald-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition-all hover:shadow-md transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>🔗 กลับหน้า MPL Trend Dashboard</span>
+                </a>
+                
+                <!-- Add New Year Button -->
+                <button onclick="openAddYearModal()" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-xs sm:text-sm rounded-xl shadow-sm transition-all hover:shadow-md transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-plus-circle"></i>
+                    <span>+ เพิ่มข้อมูลผลการสอบปีถัดไป</span>
+                </button>
+
+                <!-- Policy Recommendation Button -->
+                <button onclick="openRecommendationModal()" class="inline-flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs sm:text-sm rounded-xl transition-all">
+                    <i class="fa-solid fa-lightbulb text-amber-500"></i>
+                    <span class="hidden md:inline">ข้อเสนอแนะ</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Mode Selector & Year Tabs Bar -->
+        <div class="bg-white p-3 rounded-2xl border border-slate-200 card-shadow flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+            
+            <!-- Exam Mode Switcher (Midterm / Final) -->
+            <div class="inline-flex p-1 bg-slate-100 rounded-xl border border-slate-200 self-start md:self-auto">
+                <button id="mode-midterm" onclick="switchExamMode('midterm')" class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 bg-indigo-600 text-white shadow-sm">
+                    <i class="fa-solid fa-file-signature"></i>
+                    <span>📝 ข้อสอบกลางภาค (Midterm - 75 ข้อ)</span>
+                </button>
+                <button id="mode-final" onclick="switchExamMode('final')" class="px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 text-slate-600 hover:text-slate-900">
+                    <i class="fa-solid fa-flag-checkered"></i>
+                    <span>🏁 ข้อสอบปลายภาค (Final - 70 ข้อ)</span>
+                </button>
+            </div>
+
+            <!-- Dynamic Year Tabs -->
+            <div class="flex items-center gap-1.5 overflow-x-auto p-0.5" id="dynamic-tab-container">
+                <!-- Tabs generated dynamically by JS -->
+            </div>
+
+            <!-- Database Status Indicator -->
+            <div class="flex items-center gap-2 text-xs text-slate-500 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-100 self-end md:self-auto">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Supabase DB: <strong class="text-slate-700" id="db-status">Connected (mpl_records)</strong></span>
+            </div>
+        </div>
+
+        <!-- Banner Info for Active Selection -->
+        <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-4 text-white card-shadow flex flex-wrap items-center justify-between gap-3 border border-indigo-900/40">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center justify-center text-lg">
+                    <i id="banner-icon" class="fa-solid fa-file-signature"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-base font-bold" id="banner-title">สถิติข้อสอบกลางภาค (Midterm Exam)</h2>
+                        <span class="text-[11px] bg-indigo-500/30 text-indigo-200 px-2 py-0.5 rounded border border-indigo-400/30" id="banner-items-count">75 ข้อ | คะแนนเต็ม 75</span>
+                    </div>
+                    <p class="text-xs text-slate-300 mt-0.5" id="banner-desc">แสดงข้อมูลวิเคราะห์คุณภาพรายข้อและเกณฑ์ผ่านขั้นต่ำย้อนหลัง 3 ปี (2566 - 2568)</p>
+                </div>
+            </div>
+            <div class="text-right text-xs text-indigo-200 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
+                <span>เกณฑ์การคำนวณ MPL: </span>
+                <code class="font-mono text-amber-300 font-bold">(0.485 &times; Mean) + (0.35 &times; SD) + 14.8</code>
+            </div>
+        </div>
+
+        <!-- KPI Cards Grid (4 Cards) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            <!-- Card 1: KR-20 Reliability -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow relative overflow-hidden group hover:border-indigo-300 transition-all">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">ความเชื่อมั่นแบบทดสอบ (KR-20)</p>
+                        <h3 class="text-2xl font-bold text-slate-900 mt-1" id="kpi-kr20">0.7502</h3>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                        <i class="fa-solid fa-shield-halved text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center gap-1.5 text-xs font-medium text-emerald-600" id="kpi-kr20-status">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>ระดับดีเยี่ยม (&gt; 0.70)</span>
+                </div>
+                <div class="absolute bottom-0 left-0 right-0 h-1 bg-indigo-500"></div>
+            </div>
+
+            <!-- Card 2: Estimated MPL -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow relative overflow-hidden group hover:border-amber-300 transition-all">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">เกณฑ์ผ่านพยากรณ์ (Estimated MPL)</p>
+                        <h3 class="text-2xl font-bold text-slate-900 mt-1" id="kpi-mpl">41.70 คะแนน</h3>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                        <i class="fa-solid fa-calculator text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center justify-between text-xs font-medium text-slate-600" id="kpi-mpl-status">
+                    <span>คิดเป็น <strong class="text-amber-700" id="kpi-mpl-percent">55.60%</strong> ของเต็ม</span>
+                    <span class="text-emerald-600" id="kpi-mpl-diff">+8.85 จาก Mean</span>
+                </div>
+                <div class="absolute bottom-0 left-0 right-0 h-1 bg-amber-500"></div>
+            </div>
+
+            <!-- Card 3: Mean Difficulty (p) -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow relative overflow-hidden group hover:border-sky-300 transition-all">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">ค่าความยากเฉลี่ย (Mean Difficulty p)</p>
+                        <h3 class="text-2xl font-bold text-slate-900 mt-1" id="kpi-mean-p">0.67</h3>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center">
+                        <i class="fa-solid fa-gauge-high text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center gap-1.5 text-xs font-medium text-sky-600" id="kpi-p-status">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>ความยากปานกลางค่อนข้างง่าย</span>
+                </div>
+                <div class="absolute bottom-0 left-0 right-0 h-1 bg-sky-500"></div>
+            </div>
+
+            <!-- Card 4: Flagged Items (r < 0) -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow relative overflow-hidden group hover:border-rose-300 transition-all">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-xs font-medium text-slate-500">ข้อสอบจำแนกลบ (Flagged r &lt; 0)</p>
+                        <h3 class="text-2xl font-bold text-rose-600 mt-1" id="kpi-flagged">5 ข้อ</h3>
+                    </div>
+                    <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                        <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center gap-1.5 text-xs font-medium text-rose-600" id="kpi-flagged-status">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>ต้องทบทวนเฉลย/ปรับปรุงโจทย์</span>
+                </div>
+                <div class="absolute bottom-0 left-0 right-0 h-1 bg-rose-500"></div>
+            </div>
+
+        </div>
+
+        <!-- Visual Analytics Grid (2x2 Charts) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <!-- Chart 1: Mean Score & Estimated MPL Trend -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">แนวโน้มคะแนนเฉลี่ย & เกณฑ์ MPL พยากรณ์รายปี</h2>
+                        <p class="text-xs text-slate-500">เปรียบเทียบค่าเฉลี่ย Mean, SD Corridor และ Estimated MPL</p>
+                    </div>
+                    <span class="px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-medium">MPL & Mean Trend</span>
+                </div>
+                <div class="relative h-64">
+                    <canvas id="chartTrend"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 2: Test Reliability (KR-20) Comparison -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">เปรียบเทียบค่าความเชื่อมั่นแบบทดสอบ (KR-20)</h2>
+                        <p class="text-xs text-slate-500">ดัชนีวัดความเที่ยงตรงเทียบกับเกณฑ์ยอมรับได้ (0.70)</p>
+                    </div>
+                    <span class="px-2.5 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-medium">KR-20 Index</span>
+                </div>
+                <div class="relative h-64">
+                    <canvas id="chartKR20"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 3: Item Difficulty Breakdown (p) -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">สัดส่วนระดับความยากรายข้อ (Difficulty Index: p)</h2>
+                        <p class="text-xs text-slate-500">การกระจายตัวของความยากโจทย์ในข้อสอบ</p>
+                    </div>
+                    <span class="px-2.5 py-1 bg-sky-50 text-sky-600 rounded-lg text-xs font-medium">p Breakdown</span>
+                </div>
+                <div class="relative h-64">
+                    <canvas id="chartDifficulty"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 4: Sub-score Part Performance -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900" id="chart-parts-title">ผลสัมฤทธิ์รายพาร์ทเนื้อหา (Sub-score Breakdown)</h2>
+                        <p class="text-xs text-slate-500" id="chart-parts-desc">เปรียบเทียบร้อยละคะแนนเฉลี่ยจำแนกตามส่วนเนื้อหา</p>
+                    </div>
+                    <span class="px-2.5 py-1 bg-purple-50 text-purple-600 rounded-lg text-xs font-medium">Sub-scores</span>
+                </div>
+                <div class="relative h-64">
+                    <canvas id="chartParts"></canvas>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Detailed Item Analysis Bank (Table View) -->
+        <div class="bg-white rounded-2xl border border-slate-200 card-shadow overflow-hidden">
+            
+            <!-- Table Controls Header -->
+            <div class="p-5 border-b border-slate-200 bg-slate-50/50 space-y-4">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-lg font-bold text-slate-900" id="item-bank-title">คลังข้อสอบและตารางวิเคราะห์คุณภาพรายข้อ (Item Bank)</h2>
+                            <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full" id="table-total-count">75 ข้อ</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-0.5">ค้นหา กรอง และสืบค้นดัชนีทางจิตวิทยา ($p, r$) ของโจทย์ข้อสอบแต่ละข้อ</p>
+                    </div>
+
+                    <!-- Quick Shortcut Filters -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="setQuickFilter('flagged')" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span>เฉพาะข้อมีปัญหา (r &lt; 0)</span>
+                        </button>
+                        <button onclick="setQuickFilter('excellent')" class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-star"></i>
+                            <span>คลังข้อสอบเกณฑ์ดีเยี่ยม (r &ge; 0.40)</span>
+                        </button>
+                        <button onclick="resetFilters()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-medium transition-all">
+                            รีเซ็ตตัวกรอง
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filters Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    
+                    <!-- Search Input -->
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" id="searchInput" oninput="applyFilters()" placeholder="ค้นหาเลขข้อ หรือสถานะ..." class="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                    </div>
+
+                    <!-- Filter Difficulty (p) -->
+                    <div>
+                        <select id="filterDifficulty" onchange="applyFilters()" class="w-full py-2 px-3 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none text-slate-700">
+                            <option value="all">ทุกระดับความยาก (p)</option>
+                            <option value="very_hard">ยากมาก (p &lt; 0.20)</option>
+                            <option value="hard">ยาก (0.20 - 0.39)</option>
+                            <option value="moderate">ปานกลาง (0.40 - 0.69)</option>
+                            <option value="easy">ง่าย (0.70 - 0.84)</option>
+                            <option value="very_easy">ง่ายมาก (p &ge; 0.85)</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter Discrimination (r) -->
+                    <div>
+                        <select id="filterDiscrimination" onchange="applyFilters()" class="w-full py-2 px-3 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none text-slate-700">
+                            <option value="all">ทุกระดับอำนาจจำแนก (r)</option>
+                            <option value="excellent">จำแนกดีมาก (r &ge; 0.40)</option>
+                            <option value="good">จำแนกดี (0.30 - 0.39)</option>
+                            <option value="fair">จำแนกพอใช้ (0.20 - 0.29)</option>
+                            <option value="low">จำแนกต่ำ (0.00 - 0.19)</option>
+                            <option value="negative">จำแนกลบ (r &lt; 0.00)</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter Sub-Score Part -->
+                    <div>
+                        <select id="filterPart" onchange="applyFilters()" class="w-full py-2 px-3 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-indigo-500 outline-none text-slate-700">
+                            <!-- Populated dynamically via JS -->
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Table Body View -->
+            <div class="overflow-x-auto max-h-[520px]">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-100 text-slate-600 text-xs uppercase font-semibold sticky top-0 z-10 border-b border-slate-200">
+                        <tr>
+                            <th class="py-3 px-4 w-16 text-center">ข้อที่</th>
+                            <th class="py-3 px-4 w-32">หมวดพาร์ท</th>
+                            <th class="py-3 px-4 w-20 text-center">เฉลย</th>
+                            <th class="py-3 px-4 w-32">ค่าความยาก (p)</th>
+                            <th class="py-3 px-4 w-36">อำนาจจำแนก (r)</th>
+                            <th class="py-3 px-4">สถานะประเมินคุณภาพ & คำแนะนำคลังข้อสอบ</th>
+                            <th class="py-3 px-4 w-20 text-center">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemTableBody" class="divide-y divide-slate-100 text-xs text-slate-700">
+                        <!-- Rows rendered via JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table Footer Status -->
+            <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between text-xs text-slate-500 gap-2">
+                <span>แสดงข้อมูลข้อสอบ <strong id="visible-count" class="text-slate-800">75</strong> ข้อ</span>
+                <span class="italic"><i class="fa-solid fa-info-circle mr-1"></i>คลิกที่แถวเพื่อดูการวิเคราะห์และข้อเสนอแนะตัวลวง</span>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-10 py-4 text-center text-xs text-slate-500">
+        <p>ระบบวิเคราะห์คุณภาพข้อสอบเชิงลึก &copy; 2026 วิชา 180432 (Laws & Ethics in Pharmacy) | Supabase DB Realtime Integrated</p>
+    </footer>
+
+    <!-- ADD NEW YEAR EXAM MODAL -->
+    <div id="addYearModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 card-shadow space-y-5 relative max-h-[90vh] overflow-y-auto">
+            <button onclick="closeAddYearModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <!-- Header -->
+            <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg">
+                    <i class="fa-solid fa-calendar-plus"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">+ เพิ่มข้อมูลผลการสอบปีถัดไป</h3>
+                    <p class="text-xs text-slate-500">บันทึกผลสถิติคะแนนสอบและซิงค์ข้อมูลลง Supabase อัตโนมัติ</p>
+                </div>
+            </div>
+
+            <!-- Form Body -->
+            <form id="addYearForm" onsubmit="handleSaveNewYear(event)" class="space-y-4 text-xs">
+                
+                <!-- Exam Type Selector -->
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">ประเภทการสอบ <span class="text-rose-500">*</span></label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl flex items-center gap-2 cursor-pointer hover:bg-indigo-50">
+                            <input type="radio" name="modalExamType" value="midterm" checked onchange="updateModalSubscoresInput()" class="text-indigo-600 focus:ring-indigo-500">
+                            <span class="font-medium">📝 กลางภาค (Midterm - 75 ข้อ)</span>
+                        </label>
+                        <label class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl flex items-center gap-2 cursor-pointer hover:bg-indigo-50">
+                            <input type="radio" name="modalExamType" value="final" onchange="updateModalSubscoresInput()" class="text-indigo-600 focus:ring-indigo-500">
+                            <span class="font-medium">🏁 ปลายภาค (Final - 70 ข้อ)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">ปีการศึกษา (พ.ศ.) <span class="text-rose-500">*</span></label>
+                        <input type="text" id="new-year" required placeholder="เช่น 2569" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none font-semibold text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">จำนวนผู้เข้าสอบ (N คน) <span class="text-rose-500">*</span></label>
+                        <input type="number" id="new-n" required placeholder="เช่น 75" min="1" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">คะแนนเฉลี่ย (Mean) <span class="text-rose-500">*</span></label>
+                        <input type="number" step="0.01" id="new-mean" required placeholder="เช่น 51.50" oninput="calcAutoMPL()" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">ส่วนเบี่ยงเบนมาตรฐาน (SD) <span class="text-rose-500">*</span></label>
+                        <input type="number" step="0.01" id="new-sd" required placeholder="
