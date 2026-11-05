@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MPL Trend & Statistical Analysis Dashboard (2561-2568+)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Prompt & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        medical: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            800: '#0c4a6e',
+                            900: '#0a3651',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Prompt', 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .card-shadow {
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+        }
+        .glass-header {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+        }
+        /* Custom modal animation */
+        .modal-backdrop {
+            background-color: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-x-full transition-transform duration-300 ease-in-out max-w-sm bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <div id="toast-message" class="text-xs font-medium">ทำรายการสำเร็จ</div>
+    </div>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-40 glass-header border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-tr from-blue-600 to-indigo-600 text-white p-3 rounded-2xl shadow-md">
+                    <i class="fa-solid fa-chart-line text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">ระบบวิเคราะห์แนวโน้มคะแนนสอบ & เกณฑ์ MPL</h1>
+                    <p class="text-xs sm:text-sm text-slate-500">รวมชุดข้อมูลสถิติ พ.ศ. 2561 - 2568 (จัดการและคำนวณข้อมูลย้อนหลัง)</p>
+                </div>
+            </div>
+
+            <!-- Global Action Buttons -->
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="openAddModal()" class="inline-flex items-center gap-2 px-3.5 py-2 bg-emerald-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-emerald-700 transition shadow-md">
+                    <i class="fa-solid fa-plus text-sm"></i>
+                    เพิ่มข้อมูลปีใหม่
+                </button>
+                <button onclick="confirmResetData()" class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-50 transition shadow-sm">
+                    <i class="fa-solid fa-rotate-left text-amber-500"></i>
+                    รีเซ็ตตั้งต้น
+                </button>
+                <button onclick="exportToCSV()" class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-50 transition shadow-sm">
+                    <i class="fa-solid fa-file-csv text-emerald-600"></i>
+                    CSV
+                </button>
+                <button onclick="window.print()" class="inline-flex items-center gap-2 px-3 py-2 bg-medical-700 rounded-xl text-xs sm:text-sm font-medium text-white hover:bg-medical-800 transition shadow-md">
+                    <i class="fa-solid fa-print"></i>
+                    พิมพ์
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow space-y-8">
+        
+        <!-- Dashboard Filters & Chart Controls -->
+        <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 card-shadow flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
+            
+            <!-- Range Switcher -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">เลือกช่วงปีการศึกษา</label>
+                <div class="inline-flex p-1 bg-slate-100 rounded-xl flex-wrap gap-1" id="range-btn-group">
+                    <button id="btn-range-all" onclick="setYearRange('all')" class="range-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition bg-white text-medical-700 shadow-sm">
+                        ทั้งหมด (<span id="range-all-text">2561-2568</span>)
+                    </button>
+                    <button id="btn-range-5yr" onclick="setYearRange('last5')" class="range-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition text-slate-600 hover:text-slate-900">
+                        5 ปีล่าสุด
+                    </button>
+                    <button id="btn-range-3yr" onclick="setYearRange('last3')" class="range-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition text-slate-600 hover:text-slate-900">
+                        3 ปีล่าสุด
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chart Type Switcher -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">รูปแบบกราฟ</label>
+                <div class="inline-flex p-1 bg-slate-100 rounded-xl gap-1">
+                    <button id="btn-chart-line" onclick="setChartType('line')" class="chart-type-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition bg-white text-medical-700 shadow-sm">
+                        <i class="fa-solid fa-chart-line mr-1"></i> เส้น (Line)
+                    </button>
+                    <button id="btn-chart-bar" onclick="setChartType('bar')" class="chart-type-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition text-slate-600 hover:text-slate-900">
+                        <i class="fa-solid fa-chart-column mr-1"></i> แท่ง (Bar)
+                    </button>
+                    <button id="btn-chart-combo" onclick="setChartType('combo')" class="chart-type-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition text-slate-600 hover:text-slate-900">
+                        <i class="fa-solid fa-chart-simple mr-1"></i> ผสม (Combo)
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- KPI Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <!-- Card 1: Latest MPL -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow relative overflow-hidden">
+                <div class="absolute -right-3 -bottom-3 opacity-10 text-red-600 text-6xl">
+                    <i class="fa-solid fa-flag-checkered"></i>
+                </div>
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider" id="kpi-latest-year-title">เกณฑ์ MPL ปีล่าสุด</div>
+                <div id="kpi-latest-mpl" class="text-3xl font-bold text-red-600 mt-2">--</div>
+                <div class="flex items-center gap-1.5 mt-2 text-xs" id="kpi-mpl-yoy-wrapper">
+                    <!-- YoY change text -->
+                </div>
+            </div>
+
+            <!-- Card 2: Period Average MPL -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow relative overflow-hidden">
+                <div class="absolute -right-3 -bottom-3 opacity-10 text-blue-600 text-6xl">
+                    <i class="fa-solid fa-calculator"></i>
+                </div>
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">MPL เฉลี่ยช่วงที่เลือก</div>
+                <div id="kpi-avg-mpl" class="text-3xl font-bold text-blue-600 mt-2">--</div>
+                <div class="flex items-center gap-2 mt-2 text-xs text-slate-500">
+                    <span id="kpi-range-count">คำนวณจาก -- ปี</span>
+                </div>
+            </div>
+
+            <!-- Card 3: Avg Mean & Highest Year -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow relative overflow-hidden">
+                <div class="absolute -right-3 -bottom-3 opacity-10 text-emerald-600 text-6xl">
+                    <i class="fa-solid fa-award"></i>
+                </div>
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">คะแนนสอบเฉลี่ย (Mean)</div>
+                <div id="kpi-avg-mean" class="text-3xl font-bold text-emerald-600 mt-2">--</div>
+                <div class="flex items-center gap-2 mt-2 text-xs text-slate-500">
+                    <span id="kpi-max-mean-yr">สูงสุด: --</span>
+                </div>
+            </div>
+
+            <!-- Card 4: Mean-MPL Buffer -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow relative overflow-hidden">
+                <div class="absolute -right-3 -bottom-3 opacity-10 text-amber-500 text-6xl">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">ส่วนต่างความปลอดภัย (Mean - MPL)</div>
+                <div id="kpi-avg-gap" class="text-3xl font-bold text-amber-500 mt-2">--</div>
+                <div class="flex items-center gap-2 mt-2 text-xs text-slate-500">
+                    <span>ระยะห่างเฉลี่ยจากเกณฑ์ผ่าน</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Dynamic Chart -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-gantt text-medical-600"></i>
+                        กราฟวิเคราะห์แนวโน้มสถิติคะแนนและเกณฑ์ MPL
+                    </h2>
+                    <p class="text-xs text-slate-500">แสดงการเปรียบเทียบเชิงลึกรายปีระหว่าง Mean, SD และเกณฑ์ตัดสินผ่าน MPL</p>
+                </div>
+                <!-- Metric Visibility Toggles -->
+                <div class="flex flex-wrap items-center gap-2 text-xs">
+                    <label class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-lg cursor-pointer border border-blue-200">
+                        <input type="checkbox" id="toggle-mean" checked onchange="toggleDataset(0)" class="rounded text-blue-600">
+                        <span class="font-semibold">Mean (คะแนนเฉลี่ย)</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg cursor-pointer border border-amber-200">
+                        <input type="checkbox" id="toggle-sd" checked onchange="toggleDataset(1)" class="rounded text-amber-600">
+                        <span class="font-semibold">SD (การกระจายตัว)</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-red-700 rounded-lg cursor-pointer border border-red-200">
+                        <input type="checkbox" id="toggle-mpl" checked onchange="toggleDataset(2)" class="rounded text-red-600">
+                        <span class="font-semibold">MPL (เกณฑ์ผ่าน)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="relative w-full h-[380px] sm:h-[430px]">
+                <canvas id="mplChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Insights and Estimator Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Insight Box -->
+            <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 card-shadow space-y-4">
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-lightbulb text-amber-500"></i>
+                    ข้อสังเกตและวิเคราะห์แนวโน้มข้อมูลล่าสุด (Executive Insights)
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-600">
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+                        <div class="font-semibold text-slate-800 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                            วิเคราะห์เกณฑ์ MPL ปี 2568
+                        </div>
+                        <p class="text-xs leading-relaxed text-slate-600">
+                            ในปี <strong>2568 เกณฑ์ MPL ปรับขึ้นมาอยู่ที่ 51.79</strong> (เพิ่มขึ้น +0.96 จากปี 2567 ที่ 50.83) ขณะที่คะแนนเฉลี่ย (Mean) อยู่ที่ 69.41 และ SD เพิ่มขึ้นเป็น 5.81 แสดงให้เห็นถึงการปรับเกณฑ์มาตรฐานตามระดับความยากง่ายของข้อสอบ
+                        </p>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+                        <div class="font-semibold text-slate-800 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                            เสถียรภาพของ Mean ยุคใหม่ (2565-2568)
+                        </div>
+                        <p class="text-xs leading-relaxed text-slate-600">
+                            ผลสอบในช่วง 4 ปีหลังสุด (2565 - 2568) คะแนนเฉลี่ย (Mean) ของผู้สอบทรงตัวอยู่ในระดับสูงอย่างต่อเนื่องระหว่าง <strong>69.41 - 71.76 คะแนน</strong> สะพานเชื่อมเกณฑ์ MPL ให้คงระดับเกิน 50 คะแนน
+                        </p>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+                        <div class="font-semibold text-slate-800 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                            แนวโน้มการกระจายตัว (SD)
+                        </div>
+                        <p class="text-xs leading-relaxed text-slate-600">
+                            ค่า SD ในปี 2568 ขยับขึ้นมาที่ <strong>5.81</strong> จากปี 2567 (4.75) แสดงว่าระดับความแตกต่างของผู้ทำคะแนนเริ่มมีการกระจายตัวกว้างขึ้นเล็กน้อย
+                        </p>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+                        <div class="font-semibold text-slate-800 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            ความยืดหยุ่นของระบบจัดการ
+                        </div>
+                        <p class="text-xs leading-relaxed text-slate-600">
+                            ท่านสามารถใช้ปุ่ม <strong>"+ เพิ่มข้อมูลปีใหม่"</strong> เพื่อป้อนข้อมูลคะแนนสอบของปี พ.ศ. ถัดไป (เช่น 2569) ระบบจะทำการอัปเดตกราฟ สถิติ และค่าคาดการณ์ให้ทันทีแบบ Real-time
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Predictor Tool -->
+            <div class="bg-slate-900 text-white p-6 rounded-2xl card-shadow flex flex-col justify-between space-y-4">
+                <div>
+                    <div class="flex items-center gap-2 text-amber-400 font-semibold text-sm">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        เครื่องมือประมาณการ MPL
+                    </div>
+                    <h4 class="text-lg font-bold mt-1">MPL Estimator Calculator</h4>
+                    <p class="text-xs text-slate-400 mt-1">ป้อนค่า Mean และ SD ที่คาดการณ์ไว้เพื่อคำนวณเกณฑ์ MPL ล่วงหน้า</p>
+                </div>
+
+                <div class="space-y-3 bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">คาดการณ์คะแนนเฉลี่ย (Mean)</label>
+                        <input type="number" id="sim-mean" value="70.0" step="0.1" oninput="calculateEstimatedMPL()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-semibold text-blue-400 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-slate-300 mb-1">คาดการณ์ส่วนเบี่ยงเบน (SD)</label>
+                        <input type="number" id="sim-sd" value="5.5" step="0.1" oninput="calculateEstimatedMPL()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-semibold text-amber-400 focus:outline-none focus:border-amber-500">
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-700">
+                        <div class="text-xs text-slate-400">ประมาณการเกณฑ์ MPL ที่ได้รับ:</div>
+                        <div id="sim-result-mpl" class="text-2xl font-extrabold text-red-400 mt-1">50.72</div>
+                        <div class="text-[11px] text-slate-500 mt-1">* คำนวณจาก Regression Model สถิติย้อนหลัง</div>
+                    </div>
+                </div>
+
+                <div class="text-[11px] text-slate-400 text-center">
+                    สูตรประเมิน: <span class="font-mono text-slate-300">MPL ≈ 0.485 × Mean + 0.35 × SD + 14.8</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Data Table Section with Add/Delete Controls -->
+        <div class="bg-white rounded-2xl border border-slate-200 card-shadow overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-table text-medical-600"></i>
+                        ตารางจัดการและสรุปข้อมูลสถิติรายปี
+                    </h3>
+                    <p class="text-xs text-slate-500">แสดงรายการข้อมูลสถิติทั้งหมด สามารถเพิ่ม ลบ หรือค้นหาปีที่ต้องการได้</p>
+                </div>
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <div class="relative w-full sm:w-48">
+                        <input type="text" id="table-search" onkeyup="filterTable()" placeholder="ค้นหาปี พ.ศ. ..." class="w-full text-xs border border-slate-300 rounded-xl px-3 py-2 pl-8 focus:outline-none focus:ring-2 focus:ring-medical-500">
+                        <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
+                    </div>
+                    <button onclick="openAddModal()" class="whitespace-nowrap px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition">
+                        <i class="fa-solid fa-plus mr-1"></i> เพิ่มปีใหม่
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse" id="stat-table">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                            <th class="py-3.5 px-6">ปี พ.ศ.</th>
+                            <th class="py-3.5 px-6 text-right">Mean (คะแนนเฉลี่ย)</th>
+                            <th class="py-3.5 px-6 text-right">SD (ส่วนเบี่ยงเบน)</th>
+                            <th class="py-3.5 px-6 text-right text-red-600">MPL (เกณฑ์ขั้นต่ำ)</th>
+                            <th class="py-3.5 px-6 text-right">ส่วนต่าง (Mean - MPL)</th>
+                            <th class="py-3.5 px-6 text-right">การเปลี่ยนแปลง MPL YoY</th>
+                            <th class="py-3.5 px-6 text-center">CV %</th>
+                            <th class="py-3.5 px-6 text-center">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700" id="table-body">
+                        <!-- Dynamic rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 space-y-1">
+            <p>© ระบบวิเคราะห์และนำเสนอแนวโน้ม MPL (Minimum Passing Level) - ข้อมูลสถิติปี 2561-2568+</p>
+            <p class="text-slate-400">พัฒนาโดยระบบบริหารจัดการข้อมูลการประเมินผลทางการศึกษา</p>
+        </div>
+    </footer>
+
+    <!-- ADD NEW YEAR DATA MODAL -->
+    <div id="addModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-backdrop">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-200">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-plus text-emerald-600"></i>
+                    เพิ่มข้อมูลสถิติปีใหม่
+                </h3>
+                <button onclick="closeAddModal()" class="text-slate-400 hover:text-slate-600 text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <form id="add-year-form" onsubmit="handleAddYear(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">ปี พ.ศ. <span class="text-red-500">*</span></label>
+                    <input type="number" id="input-year" required min="2500" max="2600" placeholder="เช่น 2569" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">Mean <span class="text-red-500">*</span></label>
+                        <input type="number" id="input-mean" required step="0.01" min="0" max="100" placeholder="69.50" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">SD <span class="text-red-500">*</span></label>
+                        <input type="number" id="input-sd" required step="0.01" min="0" max="50" placeholder="5.20" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">MPL <span class="text-red-500">*</span></label>
+                        <input type="number" id="input-mpl" required step="0.01" min="0" max="100" placeholder="51.20" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
+                    <button type="button" onclick="closeAddModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
+                        ยกเลิก
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition shadow-md">
+                        บันทึกข้อมูล
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- DELETE CONFIRMATION MODAL -->
+    <div id="deleteModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-backdrop">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl border border-slate-100 text-center">
+            <div class="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+                <h3 class="text-base font-bold text-slate-800">ยืนยันการลบข้อมูล</h3>
+                <p class="text-xs text-slate-500 mt-1">คุณต้องการลบข้อมูลสถิติของ <strong id="delete-year-label" class="text-slate-800">ปี พ.ศ. --</strong> ใช่หรือไม่?</p>
+            </div>
+            <div class="flex justify-center gap-2 pt-2">
+                <button onclick="closeDeleteModal()" class="px-4 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition">
+                    ยกเลิก
+                </button>
+                <button onclick="executeDeleteYear()" class="px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-semibold hover:bg-red-700 transition shadow-md">
+                    ยืนยันการลบ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+	// --- Supabase Config ---
+	const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
+	const SUPABASE_ANON_KEY = 'YOUR_ANON_PUBLIC_KEY';
+	const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Default Dataset (2561 - 2568)
+        const defaultMasterData = [
+            { year: '2561', mean: 64.64, sd: 4.66, mpl: 47.99 },
+            { year: '2562', mean: 64.63, sd: 5.71, mpl: 47.75 },
+            { year: '2563', mean: 60.94, sd: 6.54, mpl: 46.81 },
+            { year: '2564', mean: 63.74, sd: 6.82, mpl: 49.96 },
+            { year: '2565', mean: 71.76, sd: 4.97, mpl: 52.43 },
+            { year: '2566', mean: 70.64, sd: 5.46, mpl: 52.71 },
+            { year: '2567', mean: 70.13, sd: 4.75, mpl: 50.83 },
+            { year: '2568', mean: 69.41, sd: 5.81, mpl: 51.79 }
+        ];
+
+        // Global State
+        let masterData = [];
+        let activeData = [];
+        let currentRangeKey = 'all';
+        let currentChartType = 'line';
+        let chartInstance = null;
+        let yearToDelete = null;
+
+        // Initialize App
+        window.onload = function() {
+            loadInitialData();
+            renderChart();
+            updateKPIs();
+            renderTable();
+            calculateEstimatedMPL();
+        };
+
+        // === Load & Sync Data with Supabase ===
+		async function loadInitialData() {
+		  try {
+			// ดึงข้อมูลจากตาราง mpl_records ใน Supabase
+			const { data, error } = await supabaseClient
+			  .from('mpl_records')
+			  .select('*')
+			  .order('year', { ascending: true });
+
+			if (!error && data && data.length > 0) {
+			  masterData = data;
+			} else {
+			  // หากยังไม่มีข้อมูลใน Supabase ให้ใช้ข้อมูลตั้งต้น
+			  masterData = [...defaultMasterData];
+			}
+		  } catch (err) {
+			console.error('Supabase load error:', err);
+			masterData = [...defaultMasterData];
+		  }
+
+		  // อัปเดตกราฟ ตาราง และคำนวณสถิติ
+		  sortMasterData();
+		  applyCurrentRangeFilter();
+		  updateChart();
+		  updateKPIs();
+		  renderTable();
+		  calculateEstimatedMPL();
+		}
+
+		// Sort data chronologically by year
+		function sortMasterData() {
+		  masterData.sort((a, b) => parseInt(a.year) - parseInt(b.year));
+		}
+
+		// Refresh Dashboard State
+		function saveDataState() {
+		  sortMasterData();
+		  applyCurrentRangeFilter();
+		  updateChart();
+		  updateKPIs();
+		  renderTable();
+		}
+
+        // Apply Range Filter
+        function setYearRange(rangeKey) {
+            currentRangeKey = rangeKey;
+            
+            document.querySelectorAll('.range-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-medical-700', 'shadow-sm');
+                btn.classList.add('text-slate-600');
+            });
+
+            if (rangeKey === 'all') document.getElementById('btn-range-all').classList.add('bg-white', 'text-medical-700', 'shadow-sm');
+            if (rangeKey === 'last5') document.getElementById('btn-range-5yr').classList.add('bg-white', 'text-medical-700', 'shadow-sm');
+            if (rangeKey === 'last3') document.getElementById('btn-range-3yr').classList.add('bg-white', 'text-medical-700', 'shadow-sm');
+
+            applyCurrentRangeFilter();
+            updateChart();
+            updateKPIs();
+            renderTable();
+        }
+
+        function applyCurrentRangeFilter() {
+            if (masterData.length === 0) {
+                activeData = [];
+                return;
+            }
+
+            const minYr = masterData[0].year;
+            const maxYr = masterData[masterData.length - 1].year;
+            document.getElementById('range-all-text').innerText = `${minYr}-${maxYr}`;
+
+            if (currentRangeKey === 'all') {
+                activeData = [...masterData];
+            } else if (currentRangeKey === 'last5') {
+                activeData = masterData.slice(-5);
+            } else if (currentRangeKey === 'last3') {
+                activeData = masterData.slice(-3);
+            }
+        }
+
+        // Chart Type Switcher
+        function setChartType(type) {
+            currentChartType = type;
+            document.querySelectorAll('.chart-type-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-medical-700', 'shadow-sm');
+                btn.classList.add('text-slate-600');
+            });
+
+            if (type === 'line') document.getElementById('btn-chart-line').classList.add('bg-white', 'text-medical-700', 'shadow-sm');
+            if (type === 'bar') document.getElementById('btn-chart-bar').classList.add('bg-white', 'text-medical-700', 'shadow-sm');
+            if (type === 'combo') document.getElementById('btn-chart-combo').classList.add('bg-white', 'text-medical-700', 'shadow-sm');
+
+            renderChart();
+        }
+
+        // Render Chart.js
+        function renderChart() {
+            const ctx = document.getElementById('mplChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            const labels = activeData.map(d => `พ.ศ. ${d.year}`);
+            const meanValues = activeData.map(d => d.mean);
+            const sdValues = activeData.map(d => d.sd);
+            const mplValues = activeData.map(d => d.mpl);
+
+            let datasets = [];
+
+            if (currentChartType === 'line') {
+                datasets = [
+                    {
+                        label: 'Mean (คะแนนเฉลี่ย)',
+                        data: meanValues,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.08)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#2563eb',
+                        pointRadius: 5,
+                        tension: 0.3,
+                        fill: true
+                    },
+                    {
+                        label: 'SD (ส่วนเบี่ยงเบน)',
+                        data: sdValues,
+                        borderColor: '#f97316',
+                        backgroundColor: 'rgba(249, 115, 22, 0.08)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#f97316',
+                        pointRadius: 5,
+                        tension: 0.3,
+                        fill: false
+                    },
+                    {
+                        label: 'MPL (เกณฑ์ขั้นต่ำ)',
+                        data: mplValues,
+                        borderColor: '#dc2626',
+                        backgroundColor: 'rgba(220, 38, 38, 0.08)',
+                        borderWidth: 4,
+                        pointBackgroundColor: '#dc2626',
+                        pointRadius: 6,
+                        tension: 0.3,
+                        fill: true
+                    }
+                ];
+            } else if (currentChartType === 'bar') {
+                datasets = [
+                    {
+                        label: 'Mean (คะแนนเฉลี่ย)',
+                        data: meanValues,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'SD (ส่วนเบี่ยงเบน)',
+                        data: sdValues,
+                        backgroundColor: '#f97316',
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'MPL (เกณฑ์ขั้นต่ำ)',
+                        data: mplValues,
+                        backgroundColor: '#ef4444',
+                        borderRadius: 6
+                    }
+                ];
+            } else if (currentChartType === 'combo') {
+                datasets = [
+                    {
+                        type: 'bar',
+                        label: 'Mean (คะแนนเฉลี่ย)',
+                        data: meanValues,
+                        backgroundColor: 'rgba(59, 130, 246, 0.75)',
+                        borderRadius: 6
+                    },
+                    {
+                        type: 'bar',
+                        label: 'SD (ส่วนเบี่ยงเบน)',
+                        data: sdValues,
+                        backgroundColor: 'rgba(249, 115, 22, 0.8)',
+                        borderRadius: 6
+                    },
+                    {
+                        type: 'line',
+                        label: 'MPL (เกณฑ์ขั้นต่ำ)',
+                        data: mplValues,
+                        borderColor: '#dc2626',
+                        backgroundColor: '#dc2626',
+                        borderWidth: 4,
+                        pointRadius: 6,
+                        tension: 0.3
+                    }
+                ];
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: currentChartType === 'combo' ? 'bar' : currentChartType,
+                data: { labels: labels, datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 600 },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { font: { family: 'Prompt', size: 12, weight: '500' }, usePointStyle: true }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleFont: { family: 'Prompt', size: 13, weight: 'bold' },
+                            bodyFont: { family: 'Prompt', size: 12 },
+                            padding: 12,
+                            cornerRadius: 10,
+                            callbacks: {
+                                label: context => ` ${context.dataset.label}: ${context.parsed.y.toFixed(2)} คะแนน`,
+                                afterBody: context => {
+                                    const index = context[0].dataIndex;
+                                    const item = activeData[index];
+                                    return item ? `-------------------\nส่วนต่าง (Mean - MPL): ${(item.mean - item.mpl).toFixed(2)} คะแนน` : '';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            min: 0,
+                            max: 85,
+                            grid: { color: '#f1f5f9' },
+                            ticks: { font: { family: 'Prompt', size: 11 } }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Prompt', size: 12, weight: '500' } }
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('toggle-mean').checked = true;
+            document.getElementById('toggle-sd').checked = true;
+            document.getElementById('toggle-mpl').checked = true;
+        }
+
+        function updateChart() {
+            if (!chartInstance) return;
+            chartInstance.data.labels = activeData.map(d => `พ.ศ. ${d.year}`);
+            chartInstance.data.datasets[0].data = activeData.map(d => d.mean);
+            chartInstance.data.datasets[1].data = activeData.map(d => d.sd);
+            chartInstance.data.datasets[2].data = activeData.map(d => d.mpl);
+            chartInstance.update();
+        }
+
+        function toggleDataset(index) {
+            if (!chartInstance) return;
+            const meta = chartInstance.getDatasetMeta(index);
+            meta.hidden = meta.hidden === null ? !chartInstance.data.datasets[index].hidden : null;
+            chartInstance.update();
+        }
+
+        // Update Dynamic KPI Cards
+        function updateKPIs() {
+            if (activeData.length === 0) {
+                document.getElementById('kpi-latest-mpl').innerText = '--';
+                document.getElementById('kpi-avg-mpl').innerText = '--';
+                document.getElementById('kpi-avg-mean').innerText = '--';
+                document.getElementById('kpi-avg-gap').innerText = '--';
+                return;
+            }
+
+            const latestItem = activeData[activeData.length - 1];
+            document.getElementById('kpi-latest-year-title').innerText = `เกณฑ์ MPL ปีล่าสุด (พ.ศ. ${latestItem.year})`;
+            document.getElementById('kpi-latest-mpl').innerText = latestItem.mpl.toFixed(2);
+
+            // YoY indicator for latest year
+            const yoyWrapper = document.getElementById('kpi-mpl-yoy-wrapper');
+            if (activeData.length >= 2) {
+                const prevItem = activeData[activeData.length - 2];
+                const diff = (latestItem.mpl - prevItem.mpl).toFixed(2);
+                if (diff > 0) {
+                    yoyWrapper.innerHTML = `<span class="text-emerald-600 font-semibold"><i class="fa-solid fa-arrow-up text-xs"></i> +${diff}</span> <span class="text-slate-500">เทียบกับปี ${prevItem.year}</span>`;
+                } else if (diff < 0) {
+                    yoyWrapper.innerHTML = `<span class="text-red-600 font-semibold"><i class="fa-solid fa-arrow-down text-xs"></i> ${diff}</span> <span class="text-slate-500">เทียบกับปี ${prevItem.year}</span>`;
+                } else {
+                    yoyWrapper.innerHTML = `<span class="text-slate-600 font-semibold">0.00</span> <span class="text-slate-500">เท่ากับปี ${prevItem.year}</span>`;
+                }
+            } else {
+                yoyWrapper.innerHTML = `<span class="text-slate-400">ไม่มีข้อมูลเปรียบเทียบ</span>`;
+            }
+
+            const count = activeData.length;
+            const sumMPL = activeData.reduce((acc, curr) => acc + curr.mpl, 0);
+            const sumMean = activeData.reduce((acc, curr) => acc + curr.mean, 0);
+            
+            document.getElementById('kpi-avg-mpl').innerText = (sumMPL / count).toFixed(2);
+            document.getElementById('kpi-range-count').innerText = `เฉลี่ยจากข้อมูล ${count} ปี`;
+
+            document.getElementById('kpi-avg-mean').innerText = (sumMean / count).toFixed(2);
+
+            const maxMeanObj = [...activeData].sort((a, b) => b.mean - a.mean)[0];
+            document.getElementById('kpi-max-mean-yr').innerText = `สูงสุดปี ${maxMeanObj.year}: ${maxMeanObj.mean}`;
+
+            const avgGap = (activeData.reduce((acc, curr) => acc + (curr.mean - curr.mpl), 0) / count).toFixed(2);
+            document.getElementById('kpi-avg-gap').innerText = `${avgGap} คะแนน`;
+        }
+
+        // Render Table with Action Buttons
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            if (masterData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-slate-400 text-xs">ไม่มีข้อมูลสถิติในระบบ กดปุ่ม "+ เพิ่มปีใหม่" หรือ "รีเซ็ตตั้งต้น"</td></tr>`;
+                return;
+            }
+
+            masterData.forEach((item, idx) => {
+                const gap = (item.mean - item.mpl).toFixed(2);
+                const cv = ((item.sd / item.mean) * 100).toFixed(2);
+
+                let yoyHTML = '<span class="text-slate-400">-</span>';
+                if (idx > 0) {
+                    const prevMPL = masterData[idx - 1].mpl;
+                    const diff = (item.mpl - prevMPL).toFixed(2);
+                    if (diff > 0) {
+                        yoyHTML = `<span class="text-emerald-600 font-semibold flex items-center justify-end gap-1"><i class="fa-solid fa-arrow-up text-xs"></i> +${diff}</span>`;
+                    } else if (diff < 0) {
+                        yoyHTML = `<span class="text-red-600 font-semibold flex items-center justify-end gap-1"><i class="fa-solid fa-arrow-down text-xs"></i> ${diff}</span>`;
+                    } else {
+                        yoyHTML = `<span class="text-slate-500 font-semibold">0.00</span>`;
+                    }
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/80 transition border-b border-slate-100';
+                tr.innerHTML = `
+                    <td class="py-3.5 px-6 font-bold text-slate-800">พ.ศ. ${item.year}</td>
+                    <td class="py-3.5 px-6 text-right font-semibold text-blue-700">${item.mean.toFixed(2)}</td>
+                    <td class="py-3.5 px-6 text-right font-medium text-amber-600">${item.sd.toFixed(2)}</td>
+                    <td class="py-3.5 px-6 text-right font-bold text-red-600 bg-red-50/30">${item.mpl.toFixed(2)}</td>
+                    <td class="py-3.5 px-6 text-right font-semibold text-emerald-700">${gap}</td>
+                    <td class="py-3.5 px-6 text-right">${yoyHTML}</td>
+                    <td class="py-3.5 px-6 text-center text-xs font-mono text-slate-500">${cv}%</td>
+                    <td class="py-3.5 px-6 text-center">
+                        <button onclick="openDeleteModal('${item.year}')" title="ลบข้อมูลปี ${item.year}" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Search Filter
+        function filterTable() {
+            const query = document.getElementById('table-search').value.toLowerCase();
+            const rows = document.querySelectorAll('#table-body tr');
+            rows.forEach(row => {
+                const yearText = row.cells[0]?.innerText.toLowerCase() || '';
+                if (yearText.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // ADD NEW YEAR LOGIC
+        function openAddModal() {
+            document.getElementById('addModal').classList.remove('hidden');
+            // Auto suggest next year
+            if (masterData.length > 0) {
+                const nextYr = parseInt(masterData[masterData.length - 1].year) + 1;
+                document.getElementById('input-year').value = nextYr;
+            }
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.add('hidden');
+            document.getElementById('add-year-form').reset();
+        }
+
+        async function handleAddYear(e) {
+		  e.preventDefault();
+		  const yearVal = document.getElementById('input-year').value.trim();
+		  const meanVal = parseFloat(document.getElementById('input-mean').value);
+		  const sdVal = parseFloat(document.getElementById('input-sd').value);
+		  const mplVal = parseFloat(document.getElementById('input-mpl').value);
+
+		  // Check duplicate year
+		  if (masterData.some(d => d.year === yearVal)) {
+			showToast(`ปี พ.ศ. ${yearVal} มีในระบบแล้ว!`, 'error');
+			return;
+		  }
+
+		  // ส่งข้อมูลเข้าฐานข้อมูล Supabase
+		  const { error } = await supabaseClient
+			.from('mpl_records')
+			.insert([{ 
+			  year: yearVal, 
+			  mean: meanVal, 
+			  sd: sdVal, 
+			  mpl: mplVal 
+			}]);
+
+		  if (error) {
+			showToast('เกิดข้อผิดพลาดในการบันทึก: ' + error.message, 'error');
+		  } else {
+			closeAddModal();
+			showToast(`เพิ่มข้อมูลปี พ.ศ. ${yearVal} เรียบร้อยแล้ว`, 'success');
+			await loadInitialData(); // ดึงข้อมูลใหม่มาแสดงทันที
+		  }
+		}
+
+        // DELETE YEAR LOGIC
+        function openDeleteModal(year) {
+            yearToDelete = year;
+            document.getElementById('delete-year-label').innerText = `ปี พ.ศ. ${year}`;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            yearToDelete = null;
+            document.getElementById('deleteModal').classList.add('hidden');
+        }
+
+        async function executeDeleteYear() {
+		  if (!yearToDelete) return;
+
+		  // ส่งคำสั่งลบไปที่ Supabase
+		  const { error } = await supabaseClient
+			.from('mpl_records')
+			.delete()
+			.eq('year', yearToDelete);
+
+		  if (error) {
+			alert('เกิดข้อผิดพลาดในการลบข้อมูล: ' + error.message);
+		  } else {
+			yearToDelete = null;
+			closeDeleteModal();
+			await loadInitialData();
+		  }
+		}
+
+        // RESET DEFAULT DATASET
+        function confirmResetData() {
+            masterData = JSON.parse(JSON.stringify(defaultMasterData));
+            saveDataState();
+            showToast('รีเซ็ตข้อมูลเป็นชุดมาตรฐานเรียบร้อย', 'success');
+        }
+
+        // MPL Predictor Calculator
+        function calculateEstimatedMPL() {
+            const mean = parseFloat(document.getElementById('sim-mean').value) || 0;
+            const sd = parseFloat(document.getElementById('sim-sd').value) || 0;
+
+            let estimatedMPL = (0.485 * mean) + (0.35 * sd) + 14.8;
+            if (estimatedMPL < 0) estimatedMPL = 0;
+
+            document.getElementById('sim-result-mpl').innerText = estimatedMPL.toFixed(2);
+        }
+
+        // CSV Export
+        function exportToCSV() {
+            if (masterData.length === 0) {
+                showToast('ไม่มีข้อมูลสำหรับส่งออก', 'error');
+                return;
+            }
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+            csvContent += "ปี พ.ศ.,Mean (คะแนนเฉลี่ย),SD (ส่วนเบี่ยงเบน),MPL (เกณฑ์ผ่านขั้นต่ำ),ส่วนต่าง (Mean - MPL)\n";
+
+            masterData.forEach(row => {
+                const gap = (row.mean - row.mpl).toFixed(2);
+                csvContent += `${row.year},${row.mean},${row.sd},${row.mpl},${gap}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `MPL_Statistics_2561_${masterData[masterData.length - 1].year}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Toast Feedback Helper
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const msg = document.getElementById('toast-message');
+
+            msg.innerText = message;
+            
+            if (type === 'success') {
+                icon.className = 'fa-solid fa-circle-check text-emerald-400 text-lg';
+            } else if (type === 'error') {
+                icon.className = 'fa-solid fa-circle-exclamation text-red-400 text-lg';
+            } else {
+                icon.className = 'fa-solid fa-circle-info text-blue-400 text-lg';
+            }
+
+            toast.classList.remove('translate-x-full');
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
