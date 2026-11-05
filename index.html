@@ -256,101 +256,54 @@
             </div>
         </div>
 
-        <!-- Insights and Estimator Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Insights Section (Full Width) -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow space-y-4">
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-lightbulb text-amber-500"></i>
+                ข้อสังเกตและวิเคราะห์แนวโน้มข้อมูล (Executive Insights)
+            </h3>
             
-            <!-- Insight Box -->
-            <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 card-shadow space-y-4">
-                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                    <i class="fa-solid fa-lightbulb text-amber-500"></i>
-                    ข้อสังเกตและวิเคราะห์แนวโน้มข้อมูล (Executive Insights)
-                </h3>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-600">
-                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-                        <div class="font-semibold text-slate-800 flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
-                            วิเคราะห์เกณฑ์ MPL ปี 2568
-                        </div>
-                        <p class="text-xs leading-relaxed text-slate-600">
-                            ในปี <strong>2568 เกณฑ์ MPL อยู่ที่ 51.79</strong> (คำนวณจาก $0.65 \times P_{90}$ ที่ $P_{90} = 79.68$) คะแนนเฉลี่ย (Mean) อยู่ที่ 69.41 และ SD อยู่ที่ 5.81 แสดงถึงระดับมาตรฐานวิชาชีพที่คงเส้นคงวา
-                        </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-slate-600">
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+                    <div class="font-semibold text-slate-800 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                        วิเคราะห์เกณฑ์ MPL ปี 2568
                     </div>
+                    <p class="text-xs leading-relaxed text-slate-600">
+                        ในปี <strong>2568 เกณฑ์ MPL อยู่ที่ 51.79</strong> (คำนวณจาก $0.65 \times P_{90}$ ที่ $P_{90} = 79.68$) คะแนนเฉลี่ย (Mean) อยู่ที่ 69.41 และ SD อยู่ที่ 5.81 แสดงถึงระดับมาตรฐานวิชาชีพที่คงเส้นคงวา
+                    </p>
+                </div>
 
-                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-                        <div class="font-semibold text-slate-800 flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                            เสถียรภาพของ Mean (2565-2568)
-                        </div>
-                        <p class="text-xs leading-relaxed text-slate-600">
-                            ผลสอบ 4 ปีหลังสุด (2565 - 2568) คะแนนเฉลี่ย (Mean) ของนิสิตทรงตัวอยู่ในระดับสูงอย่างต่อเนื่องระหว่าง <strong>69.41 - 71.76 คะแนน</strong> และค่า $P_{90}$ อยู่ในช่วง 78.20 - 81.09
-                        </p>
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+                    <div class="font-semibold text-slate-800 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                        เสถียรภาพของ Mean (2565-2568)
                     </div>
+                    <p class="text-xs leading-relaxed text-slate-600">
+                        ผลสอบ 4 ปีหลังสุด (2565 - 2568) คะแนนเฉลี่ย (Mean) ของนิสิตทรงตัวอยู่ในระดับสูงอย่างต่อเนื่องระหว่าง <strong>69.41 - 71.76 คะแนน</strong> และค่า $P_{90}$ อยู่ในช่วง 78.20 - 81.09
+                    </p>
+                </div>
 
-                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-                        <div class="font-semibold text-slate-800 flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-                            อัตโนมัติ Dynamic Regression Model
-                        </div>
-                        <p class="text-xs leading-relaxed text-slate-600" id="insight-reg-text">
-                            เมื่อสลับไปใช้สูตร Regression ระบบจะคำนวณหาค่าสัมประสิทธิ์แบบ Real-time จากชุดข้อมูลจริง: <span class="font-mono font-semibold text-indigo-700">MPL = 0.67×Mean + 1.20×SD - 1.72</span> ($R^2 = 94.8\%$)
-                        </p>
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+                    <div class="font-semibold text-slate-800 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
+                        อัตโนมัติ Dynamic Regression Model
                     </div>
+                    <p class="text-xs leading-relaxed text-slate-600" id="insight-reg-text">
+                        เมื่อสลับไปใช้สูตร Regression ระบบจะคำนวณหาค่าสัมประสิทธิ์แบบ Real-time จากชุดข้อมูลจริง: <span class="font-mono font-semibold text-indigo-700">MPL = 0.67×Mean + 1.20×SD - 1.72</span> ($R^2 = 94.8\%$)
+                    </p>
+                </div>
 
-                    <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
-                        <div class="font-semibold text-slate-800 flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                            ความยืดหยุ่นของระบบจัดการ
-                        </div>
-                        <p class="text-xs leading-relaxed text-slate-600">
-                            ท่านสามารถใช้ปุ่ม <strong>"+ เพิ่มข้อมูลปีใหม่"</strong> เพื่อป้อนข้อมูลคะแนนสอบของปี พ.ศ. ถัดไป (เช่น 2569) ระบบจะคำนวณสถิติและอัปเดตสมการ Regression ใหม่ให้อัตโนมัติทันที
-                        </p>
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
+                    <div class="font-semibold text-slate-800 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                        ความยืดหยุ่นของระบบจัดการ
                     </div>
+                    <p class="text-xs leading-relaxed text-slate-600">
+                        ท่านสามารถใช้ปุ่ม <strong>"+ เพิ่มข้อมูลปีใหม่"</strong> เพื่อป้อนข้อมูลคะแนนสอบของปี พ.ศ. ถัดไป (เช่น 2569) ระบบจะคำนวณสถิติและอัปเดตสมการ Regression ใหม่ให้อัตโนมัติทันที
+                    </p>
                 </div>
             </div>
-
-            <!-- Predictor Tool -->
-            <div class="bg-slate-900 text-white p-6 rounded-2xl card-shadow flex flex-col justify-between space-y-4">
-                <div>
-                    <div class="flex items-center gap-2 text-amber-400 font-semibold text-sm">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        เครื่องมือประมาณการ MPL
-                    </div>
-                    <h4 class="text-lg font-bold mt-1">MPL Estimator Calculator</h4>
-                    <p class="text-xs text-slate-400 mt-1" id="estimator-sub-desc">คำนวณเกณฑ์ MPL ล่วงหน้าตามสูตรปัจจุบัน</p>
-                </div>
-
-                <div class="space-y-3 bg-slate-800/80 p-4 rounded-xl border border-slate-700">
-                    <!-- Cohen Input (P90) -->
-                    <div id="estimator-cohen-inputs">
-                        <label class="block text-xs font-medium text-slate-300 mb-1">คะแนน Percentile 90 ($P_{90}$)</label>
-                        <input type="number" id="sim-p90" value="79.68" step="0.01" oninput="calculateEstimatedMPL()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-semibold text-purple-400 focus:outline-none focus:border-purple-500">
-                    </div>
-
-                    <!-- Regression Inputs (Mean & SD) -->
-                    <div id="estimator-reg-inputs" class="space-y-2">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">คาดการณ์ Mean</label>
-                            <input type="number" id="sim-mean" value="69.41" step="0.01" oninput="calculateEstimatedMPL()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-semibold text-blue-400 focus:outline-none focus:border-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-300 mb-1">คาดการณ์ SD</label>
-                            <input type="number" id="sim-sd" value="5.81" step="0.01" oninput="calculateEstimatedMPL()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-semibold text-amber-400 focus:outline-none focus:border-amber-500">
-                        </div>
-                    </div>
-
-                    <div class="pt-2 border-t border-slate-700">
-                        <div class="text-xs text-slate-400">ประมาณการเกณฑ์ MPL ที่ได้รับ:</div>
-                        <div id="sim-result-mpl" class="text-2xl font-extrabold text-red-400 mt-1">51.79</div>
-                        <div class="text-[11px] text-slate-500 mt-1" id="sim-formula-note">* คำนวณจาก Modified Cohen: 0.65 × P90</div>
-                    </div>
-                </div>
-
-                <div class="text-[11px] text-slate-400 text-center" id="sim-formula-caption">
-                    สูตรประเมิน: <span class="font-mono text-slate-300">MPL = 0.65 × P90</span>
-                </div>
-            </div>
-
         </div>
 
         <!-- Data Table Section with Add/Delete Controls -->
@@ -551,7 +504,6 @@
             renderChart();
             updateKPIs();
             renderTable();
-            calculateEstimatedMPL();
         }
 
         // Sort data chronologically
@@ -560,7 +512,6 @@
         }
 
         // --- Dynamic OLS Multiple Linear Regression Solver ---
-        // Calculates MPL = b1*Mean + b2*SD + b0 automatically from masterData
         function computeCourseOLSRegression() {
             const data = masterData;
             if (!data || data.length < 3) {
@@ -580,10 +531,6 @@
                 sumMY += m * y; sumSY += s * y;
             });
 
-            // 3x3 System for [b0, b1, b2]
-            // [ sum1   sumM   sumS  ] [b0]   [sumY ]
-            // [ sumM   sumM2  sumMS ] [b1] = [sumMY]
-            // [ sumS   sumMS  sumS2 ] [b2]   [sumSY]
             let a = sum1,  b = sumM,  c = sumS;
             let d = sumM2, e = sumMS, f = sumS2;
 
@@ -602,7 +549,6 @@
             let b1 = inv21 * sumY + inv22 * sumMY + inv23 * sumSY;
             let b2 = inv31 * sumY + inv32 * sumMY + inv33 * sumSY;
 
-            // Calculate R2
             let meanY = sumY / n;
             let ssTot = data.reduce((acc, d) => acc + Math.pow(d.mpl - meanY, 2), 0);
             let ssRes = data.reduce((acc, d) => {
@@ -613,7 +559,6 @@
 
             regCoeffs = { b0, b1, b2, r2 };
 
-            // Update UI banners
             const textReg = `สมการ Regression จากข้อมูลจริง (${data.length} ปี): <span class="font-mono font-semibold text-indigo-700">MPL = ${b1.toFixed(2)}×Mean + ${b2.toFixed(2)}×SD ${b0 >= 0 ? '+' : ''}${b0.toFixed(2)}</span> (R² = ${(r2 * 100).toFixed(1)}%)`;
             document.getElementById('insight-reg-text').innerHTML = textReg;
 
@@ -622,7 +567,6 @@
             }
         }
 
-        // Calculate MPL for an item based on active formula
         function getItemMPL(item) {
             if (currentFormula === 'cohen') {
                 return item.p90 ? parseFloat((0.65 * item.p90).toFixed(2)) : item.mpl;
@@ -632,7 +576,6 @@
             }
         }
 
-        // Switch Formula Mode
         function switchFormula(formulaKey) {
             currentFormula = formulaKey;
 
@@ -640,38 +583,24 @@
             const btnReg = document.getElementById('btn-formula-reg');
             const title = document.getElementById('formula-display-title');
             const desc = document.getElementById('formula-display-desc');
-            const estNote = document.getElementById('sim-formula-note');
-            const estCaption = document.getElementById('sim-formula-caption');
-            const cohenInputs = document.getElementById('estimator-cohen-inputs');
-            const regInputs = document.getElementById('estimator-reg-inputs');
 
             if (formulaKey === 'cohen') {
                 btnCohen.className = "flex-1 md:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-md";
                 btnReg.className = "flex-1 md:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white";
                 title.innerHTML = "🎯 Modified Cohen Method (0.65 × P90)";
                 desc.innerHTML = "เกณฑ์หลักมาตรฐานวิชาชีพ: คำนวณจาก 65% ของคะแนนที่ Percentile 90 ($0.65 \times P_{90}$) โดยไม่หักคะแนนเดา";
-                estNote.innerText = "* คำนวณจาก Modified Cohen: 0.65 × P90";
-                estCaption.innerHTML = 'สูตรประเมิน: <span class="font-mono text-slate-300">MPL = 0.65 × P90</span>';
-                cohenInputs.classList.remove('hidden');
-                regInputs.classList.add('hidden');
             } else {
                 btnReg.className = "flex-1 md:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-md";
                 btnCohen.className = "flex-1 md:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white";
                 title.innerHTML = "📊 Dynamic Course Regression (OLS Model)";
                 desc.innerHTML = `สมการถดถอยเชิงเส้นพหุคูณจากการประมวลผลข้อมูลจริง (${masterData.length} ปี): <span class="font-mono bg-blue-900/60 px-1.5 py-0.5 rounded text-amber-300">MPL = ${regCoeffs.b1.toFixed(2)}×Mean + ${regCoeffs.b2.toFixed(2)}×SD ${regCoeffs.b0 >= 0 ? '+' : ''}${regCoeffs.b0.toFixed(2)}</span> (R² = ${(regCoeffs.r2 * 100).toFixed(1)}%)`;
-                estNote.innerText = `* คำนวณจาก Dynamic OLS Regression (R² = ${(regCoeffs.r2 * 100).toFixed(1)}%)`;
-                estCaption.innerHTML = `สูตรประเมิน: <span class="font-mono text-slate-300">MPL = ${regCoeffs.b1.toFixed(2)}×Mean + ${regCoeffs.b2.toFixed(2)}×SD ${regCoeffs.b0 >= 0 ? '+' : ''}${regCoeffs.b0.toFixed(2)}</span>`;
-                cohenInputs.classList.add('hidden');
-                regInputs.classList.remove('hidden');
             }
 
             updateChart();
             updateKPIs();
             renderTable();
-            calculateEstimatedMPL();
         }
 
-        // Apply Range Filter
         function setYearRange(rangeKey) {
             currentRangeKey = rangeKey;
             
@@ -709,7 +638,6 @@
             }
         }
 
-        // Chart Type Switcher
         function setChartType(type) {
             currentChartType = type;
             document.querySelectorAll('.chart-type-btn').forEach(btn => {
@@ -724,7 +652,6 @@
             renderChart();
         }
 
-        // Render Chart.js
         function renderChart() {
             const ctx = document.getElementById('mplChart').getContext('2d');
             
@@ -873,7 +800,6 @@
             chartInstance.update();
         }
 
-        // Update Dynamic KPI Cards
         function updateKPIs() {
             if (activeData.length === 0) {
                 document.getElementById('kpi-latest-mpl').innerText = '--';
@@ -889,7 +815,6 @@
             document.getElementById('kpi-latest-year-title').innerText = `เกณฑ์ MPL ปีล่าสุด (พ.ศ. ${latestItem.year})`;
             document.getElementById('kpi-latest-mpl').innerText = latestMPL.toFixed(2);
 
-            // YoY indicator
             const yoyWrapper = document.getElementById('kpi-mpl-yoy-wrapper');
             if (activeData.length >= 2) {
                 const prevItem = activeData[activeData.length - 2];
@@ -922,7 +847,6 @@
             document.getElementById('kpi-avg-gap').innerText = `${avgGap} คะแนน`;
         }
 
-        // Render Table with Action Buttons
         function renderTable() {
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '';
@@ -971,7 +895,6 @@
             });
         }
 
-        // Search Filter
         function filterTable() {
             const query = document.getElementById('table-search').value.toLowerCase();
             const rows = document.querySelectorAll('#table-body tr');
@@ -985,23 +908,6 @@
             });
         }
 
-        // MPL Estimator Calculator
-        function calculateEstimatedMPL() {
-            let estimatedMPL = 0;
-            if (currentFormula === 'cohen') {
-                const p90 = parseFloat(document.getElementById('sim-p90').value) || 0;
-                estimatedMPL = 0.65 * p90;
-            } else {
-                const mean = parseFloat(document.getElementById('sim-mean').value) || 0;
-                const sd = parseFloat(document.getElementById('sim-sd').value) || 0;
-                estimatedMPL = regCoeffs.b1 * mean + regCoeffs.b2 * sd + regCoeffs.b0;
-            }
-
-            if (estimatedMPL < 0) estimatedMPL = 0;
-            document.getElementById('sim-result-mpl').innerText = estimatedMPL.toFixed(2);
-        }
-
-        // ADD NEW YEAR LOGIC
         function openAddModal() {
             document.getElementById('addModal').classList.remove('hidden');
             if (masterData.length > 0) {
@@ -1065,7 +971,6 @@
             }
         }
 
-        // DELETE YEAR LOGIC
         function openDeleteModal(year) {
             yearToDelete = year;
             document.getElementById('delete-year-label').innerText = `ปี พ.ศ. ${year}`;
@@ -1107,17 +1012,14 @@
             updateChart();
             updateKPIs();
             renderTable();
-            calculateEstimatedMPL();
         }
 
-        // RESET DEFAULT DATASET
         function confirmResetData() {
             masterData = JSON.parse(JSON.stringify(defaultMasterData));
             saveAndRefreshState();
             showToast('รีเซ็ตข้อมูลเป็นชุดมาตรฐาน 2561-2568 เรียบร้อย', 'success');
         }
 
-        // CSV Export
         function exportToCSV() {
             if (masterData.length === 0) {
                 showToast('ไม่มีข้อมูลสำหรับส่งออก', 'error');
@@ -1141,7 +1043,6 @@
             document.body.removeChild(link);
         }
 
-        // Toast Feedback Helper
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             const icon = document.getElementById('toast-icon');
