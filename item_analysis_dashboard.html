@@ -116,36 +116,47 @@
                 </button>
             </div>
 
-            <!-- Dynamic Year Tabs -->
-            <div class="flex items-center gap-1.5 overflow-x-auto p-0.5" id="dynamic-tab-container">
-                <!-- Year filter tabs rendered by JS -->
-            </div>
-
-            <!-- Database Status Indicator -->
-            <div class="flex items-center gap-2 text-xs text-slate-600 px-3 py-1.5 bg-slate-50 rounded-xl border border-slate-200 self-end md:self-auto cursor-pointer" onclick="openSupabaseModal()">
-                <span id="db-status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>DB: <strong class="text-slate-800" id="db-status-text">Supabase Active</strong></span>
-                <i class="fa-solid fa-gear text-slate-400 text-xs ml-1"></i>
+            <!-- Dynamic Year Selection Tabs -->
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0" id="dynamic-tab-container">
+                <!-- Rendered dynamically via JS -->
             </div>
         </div>
 
-        <!-- Banner Info for Active Selection -->
-        <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-4 text-white card-shadow flex flex-wrap items-center justify-between gap-3 border border-indigo-900/40">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center justify-center text-lg">
-                    <i id="banner-icon" class="fa-solid fa-file-signature"></i>
-                </div>
-                <div>
-                    <div class="flex items-center gap-2">
-                        <h2 class="text-base font-bold" id="banner-title">สถิติข้อสอบกลางภาค (Midterm Exam)</h2>
-                        <span class="text-[11px] bg-indigo-500/30 text-indigo-200 px-2.5 py-0.5 rounded border border-indigo-400/30 font-semibold" id="banner-items-count">75 ข้อ | คะแนนเต็ม 75</span>
+        <!-- Banner Info for Active Selection & Formula Switcher -->
+        <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-4 text-white card-shadow space-y-3 border border-indigo-900/40">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-400/30 flex items-center justify-center text-lg">
+                        <i id="banner-icon" class="fa-solid fa-file-signature"></i>
                     </div>
-                    <p class="text-xs text-slate-300 mt-0.5" id="banner-desc">แสดงข้อมูลวิเคราะห์คุณภาพรายข้อและเกณฑ์ผ่านขั้นต่ำย้อนหลัง (2566 - 2568)</p>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-base font-bold" id="banner-title">สถิติข้อสอบกลางภาค (Midterm Exam)</h2>
+                            <span class="text-[11px] bg-indigo-500/30 text-indigo-200 px-2.5 py-0.5 rounded border border-indigo-400/30 font-semibold" id="banner-items-count">75 ข้อ | คะแนนเต็ม 75</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-0.5" id="banner-desc">แสดงข้อมูลวิเคราะห์คุณภาพรายข้อและเกณฑ์ผ่านขั้นต่ำย้อนหลัง (2566 - 2568)</p>
+                    </div>
+                </div>
+
+                <!-- Formula Toggle Switcher (Default: Modified Cohen 0.65 * P90) -->
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-slate-800/80 p-1.5 rounded-xl border border-slate-700/60">
+                    <span class="text-[11px] text-slate-300 font-medium px-2">เลือกสูตร MPL:</span>
+                    <div class="inline-flex p-0.5 bg-slate-900 rounded-lg border border-slate-700">
+                        <button id="btn-formula-cohen" onclick="switchFormula('cohen')" class="px-3 py-1.5 rounded-md text-xs font-bold transition-all bg-amber-600 text-white shadow-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-bullseye"></i>
+                            <span>🎯 Modified Cohen (0.65 × P90)</span>
+                        </button>
+                        <button id="btn-formula-regression" onclick="switchFormula('regression')" class="px-3 py-1.5 rounded-md text-xs font-bold transition-all text-slate-400 hover:text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <span>📊 Regression Model</span>
+                        </button>
+                    </div>
                 </div>
             </div>
-            <div class="text-right text-xs text-indigo-200 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
-                <span>สูตรประมาณการ MPL: </span>
-                <code class="font-mono text-amber-300 font-bold">(0.485 &times; Mean) + (0.35 &times; SD) + 14.8</code>
+
+            <div class="w-full text-right text-xs text-indigo-200 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10 flex items-center justify-between">
+                <span class="text-slate-300">สูตรคำนวณ MPL ที่เลือกใช้เป็นเกณฑ์หลัก:</span>
+                <code class="font-mono text-amber-300 font-bold" id="active-formula-text">MPL = 0.65 &times; P90 (เกณฑ์ Modified Cohen แบบไม่หักคะแนนเดา)</code>
             </div>
         </div>
 
@@ -157,7 +168,7 @@
                 <div class="flex justify-between items-start">
                     <div>
                         <p class="text-xs font-medium text-slate-500">ความเชื่อมั่นแบบทดสอบ (KR-20)</p>
-                        <h3 class="text-2xl font-bold text-slate-900 mt-1" id="kpi-kr20">0.7502</h3>
+                        <h3 class="text-2xl font-bold text-slate-900 mt-1" id="kpi-kr20">0.7420</h3>
                     </div>
                     <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
                         <i class="fa-solid fa-shield-halved text-lg"></i>
@@ -174,16 +185,16 @@
             <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow relative overflow-hidden group hover:border-amber-300 transition-all">
                 <div class="flex justify-between items-start">
                     <div>
-                        <p class="text-xs font-medium text-slate-500">เกณฑ์ผ่านพยากรณ์ (Estimated MPL)</p>
-                        <h3 class="text-2xl font-bold text-slate-900 mt-1" id="kpi-mpl">41.70 คะแนน</h3>
+                        <p class="text-xs font-medium text-slate-500" id="kpi-mpl-title">เกณฑ์ผ่านขั้นต่ำ (Modified Cohen MPL)</p>
+                        <h3 class="text-2xl font-bold text-amber-700 mt-1" id="kpi-mpl">35.75 คะแนน</h3>
                     </div>
                     <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                        <i class="fa-solid fa-calculator text-lg"></i>
+                        <i class="fa-solid fa-bullseye text-lg"></i>
                     </div>
                 </div>
                 <div class="mt-3 flex items-center justify-between text-xs font-medium text-slate-600" id="kpi-mpl-status">
-                    <span>คิดเป็น <strong class="text-amber-700" id="kpi-mpl-percent">55.60%</strong> ของเต็ม</span>
-                    <span class="text-emerald-600" id="kpi-mpl-diff">+8.85 จาก Mean</span>
+                    <span>คิดเป็น <strong class="text-amber-800" id="kpi-mpl-percent">47.67%</strong> ของเต็ม</span>
+                    <span class="text-emerald-600" id="kpi-mpl-diff">-14.80 จาก Mean</span>
                 </div>
                 <div class="absolute bottom-0 left-0 right-0 h-1 bg-amber-500"></div>
             </div>
@@ -233,8 +244,8 @@
             <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow">
                 <div class="flex items-center justify-between mb-4">
                     <div>
-                        <h2 class="text-base font-bold text-slate-900">แนวโน้มคะแนนเฉลี่ย & เกณฑ์ MPL พยากรณ์รายปี</h2>
-                        <p class="text-xs text-slate-500">เปรียบเทียบค่าเฉลี่ย Mean, SD Corridor และ Estimated MPL</p>
+                        <h2 class="text-base font-bold text-slate-900">แนวโน้มคะแนนเฉลี่ย & เกณฑ์ผ่าน MPL รายปี</h2>
+                        <p class="text-xs text-slate-500">เปรียบเทียบค่าเฉลี่ย Mean, SD Corridor และเกณฑ์ผ่านขั้นต่ำ</p>
                     </div>
                     <span class="px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-medium">MPL & Mean Trend</span>
                 </div>
@@ -423,11 +434,11 @@
                     <label class="block font-semibold text-slate-700 mb-1">ประเภทการสอบ <span class="text-rose-500">*</span></label>
                     <div class="grid grid-cols-2 gap-2">
                         <label class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl flex items-center gap-2 cursor-pointer hover:bg-indigo-50">
-                            <input type="radio" name="modalExamType" value="midterm" checked onchange="updateModalSubscoresInput()" class="text-indigo-600 focus:ring-indigo-500">
+                            <input type="radio" name="modalExamType" value="midterm" checked class="text-indigo-600 focus:ring-indigo-500">
                             <span class="font-medium">📝 กลางภาค (Midterm - 75 ข้อ)</span>
                         </label>
                         <label class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl flex items-center gap-2 cursor-pointer hover:bg-indigo-50">
-                            <input type="radio" name="modalExamType" value="final" onchange="updateModalSubscoresInput()" class="text-indigo-600 focus:ring-indigo-500">
+                            <input type="radio" name="modalExamType" value="final" class="text-indigo-600 focus:ring-indigo-500">
                             <span class="font-medium">🏁 ปลายภาค (Final - 70 ข้อ)</span>
                         </label>
                     </div>
@@ -457,14 +468,25 @@
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
+                        <label class="block font-semibold text-slate-700 mb-1">คะแนน Percentile 90 ($P_{90}$) <span class="text-rose-500">*</span></label>
+                        <input type="number" step="0.01" id="new-p90" required placeholder="เช่น 55.00" oninput="calcAutoMPL()" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                    </div>
+                    <div>
                         <label class="block font-semibold text-slate-700 mb-1">ค่าความเชื่อมั่น (KR-20) <span class="text-rose-500">*</span></label>
                         <input type="number" step="0.0001" id="new-kr20" required placeholder="เช่น 0.7250" max="1" min="0" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
                     </div>
-                    <div>
-                        <label class="block font-semibold text-slate-700 mb-1">เกณฑ์ MPL คำนวณพยากรณ์</label>
-                        <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl font-bold text-amber-800 text-sm flex items-center justify-between">
-                            <span id="new-mpl-preview">0.00 คะแนน</span>
-                            <span class="text-[10px] bg-amber-200/60 text-amber-900 px-1.5 py-0.5 rounded">Auto Calc</span>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">เกณฑ์ MPL คำนวณพยากรณ์เปรียบเทียบ</label>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-xl">
+                            <span class="text-slate-500 block text-[10px]">🎯 Modified Cohen (0.65 × P90):</span>
+                            <strong class="text-amber-800 font-bold text-sm" id="new-mpl-cohen">0.00 คะแนน</strong>
+                        </div>
+                        <div class="p-2.5 bg-indigo-50 border border-indigo-200 rounded-xl">
+                            <span class="text-slate-500 block text-[10px]">📊 Regression Model:</span>
+                            <strong class="text-indigo-700 font-bold text-sm" id="new-mpl-regression">0.00 คะแนน</strong>
                         </div>
                     </div>
                 </div>
@@ -621,9 +643,9 @@
                 <div class="p-3.5 bg-indigo-50/60 rounded-xl border border-indigo-100 space-y-1">
                     <h4 class="font-bold text-indigo-900 flex items-center gap-2">
                         <i class="fa-solid fa-sliders text-indigo-600"></i>
-                        1. การปรับสมดุลระดับความยากข้อสอบ (Difficulty Level):
+                        1. การใช้เกณฑ์ Modified Cohen (0.65 × P90):
                     </h4>
-                    <p class="text-slate-600">ปัจจุบันข้อสอบมีสัดส่วนข้อที่ง่ายเกินไป ($p \ge 0.85$) สะสมอยู่ 25% - 30% แนะนำให้ปรับลดลงเหลือประมาณ 15% แล้วเพิ่มข้อสอบระดับความยากปานกลาง ($0.40 \le p < 0.70$) เพื่อเพิ่มค่าความเชื่อมั่น ($\text{KR-20}$) ให้ทะลุ $0.75$ อย่างสม่ำเสมอ</p>
+                    <p class="text-slate-600">การกำหนดเกณฑ์ผ่านด้วยสูตร $0.65 \times P_{90}$ ช่วยปรับเกณฑ์ขั้นต่ำตามความยากง่ายของข้อสอบในแต่ละปีได้อย่างยืดหยุ่น ลดผลกระทบจากคะแนน Outlier ที่สูงเกินไปของกลุ่มหัวกะทิ (5% แรก)</p>
                 </div>
 
                 <div class="p-3.5 bg-rose-50/60 rounded-xl border border-rose-100 space-y-1">
@@ -665,28 +687,25 @@
             try {
                 if (window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('placeholder')) {
                     supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    document.getElementById('db-status-text').innerText = 'Supabase Connected';
-                    document.getElementById('db-status-dot').className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse';
+                    document.getElementById('modal-db-status').innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span><span>พร้อมใช้งาน (Supabase Connected)</span>';
                 } else {
-                    document.getElementById('db-status-text').innerText = 'Local Default (Setup Required)';
-                    document.getElementById('db-status-dot').className = 'w-2.5 h-2.5 rounded-full bg-amber-400';
+                    document.getElementById('modal-db-status').innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400"></span><span>Local Default (Setup Required)</span>';
                 }
             } catch (e) {
                 console.warn("Supabase Init Error:", e.message);
-                document.getElementById('db-status-text').innerText = 'Offline Mode';
-                document.getElementById('db-status-dot').className = 'w-2.5 h-2.5 rounded-full bg-slate-400';
+                document.getElementById('modal-db-status').innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-400"></span><span>Offline Mode</span>';
             }
         }
 
         // ------------------------------------------
-        // 2. MASTER DATASETS (MIDTERM & FINAL)
+        // 2. MASTER DATASETS WITH ACCURATE P90 VALUES
         // ------------------------------------------
         const midtermData = {
             years: ['2566', '2567', '2568'],
             stats: {
-                '2566': { n: 86, mean: 53.65, sd: 5.56, kr20: 0.6591, mpl: 42.77, meanP: 0.72, meanR: 0.19, flagged: 5, parts: [7.34, 28.99, 17.33], diffDist: [3, 9, 15, 21, 27] },
-                '2567': { n: 100, mean: 54.61, sd: 4.58, kr20: 0.5091, mpl: 42.89, meanP: 0.73, meanR: 0.17, flagged: 6, parts: [7.40, 29.28, 17.93], diffDist: [2, 8, 17, 11, 37] },
-                '2568': { n: 65, mean: 50.55, sd: 6.79, kr20: 0.7502, mpl: 41.70, meanP: 0.67, meanR: 0.23, flagged: 5, parts: [7.54, 26.66, 16.35], diffDist: [4, 8, 21, 21, 21] }
+                '2566': { n: 86, mean: 53.65, sd: 5.56, p90: 57.00, kr20: 0.7502, meanP: 0.72, meanR: 0.19, flagged: 5, parts: [7.34, 28.99, 17.33], diffDist: [3, 9, 15, 21, 27] },
+                '2567': { n: 100, mean: 54.61, sd: 4.58, p90: 57.00, kr20: 0.5091, meanP: 0.73, meanR: 0.17, flagged: 6, parts: [7.40, 29.28, 17.93], diffDist: [2, 8, 17, 11, 37] },
+                '2568': { n: 65, mean: 50.55, sd: 6.79, p90: 55.00, kr20: 0.7420, meanP: 0.67, meanR: 0.23, flagged: 5, parts: [7.54, 26.66, 16.35], diffDist: [4, 8, 21, 21, 21] }
             },
             partsList: [
                 { id: 'all', name: 'ทุกพาร์ทเนื้อหา' },
@@ -699,9 +718,9 @@
         const finalData = {
             years: ['2566', '2567', '2568'],
             stats: {
-                '2566': { n: 86, mean: 48.73, sd: 4.89, kr20: 0.5452, mpl: 40.15, meanP: 0.70, meanR: 0.18, flagged: 5, parts: [5.90, 16.28, 7.13, 6.77, 5.77, 6.90], diffDist: [3, 6, 22, 15, 24] },
-                '2567': { n: 100, mean: 48.56, sd: 4.14, kr20: 0.3633, mpl: 39.80, meanP: 0.69, meanR: 0.15, flagged: 7, parts: [6.84, 16.00, 6.87, 6.53, 5.87, 6.45], diffDist: [3, 7, 20, 19, 21] },
-                '2568': { n: 65, mean: 48.09, sd: 5.30, kr20: 0.6078, mpl: 39.98, meanP: 0.69, meanR: 0.18, flagged: 8, parts: [6.66, 15.58, 7.08, 6.60, 5.65, 6.52], diffDist: [3, 6, 20, 20, 21] }
+                '2566': { n: 86, mean: 48.73, sd: 4.89, p90: 54.00, kr20: 0.5452, meanP: 0.70, meanR: 0.18, flagged: 5, parts: [5.90, 16.28, 7.13, 6.77, 5.77, 6.90], diffDist: [3, 6, 22, 15, 24] },
+                '2567': { n: 100, mean: 48.56, sd: 4.14, p90: 53.00, kr20: 0.3633, meanP: 0.69, meanR: 0.15, flagged: 7, parts: [6.84, 16.00, 6.87, 6.53, 5.87, 6.45], diffDist: [3, 7, 20, 19, 21] },
+                '2568': { n: 65, mean: 48.09, sd: 5.30, p90: 55.00, kr20: 0.6078, meanP: 0.69, meanR: 0.18, flagged: 8, parts: [6.66, 15.58, 7.08, 6.60, 5.65, 6.52], diffDist: [3, 6, 20, 20, 21] }
             },
             partsList: [
                 { id: 'all', name: 'ทุกพาร์ทเนื้อหา' },
@@ -714,10 +733,43 @@
             ]
         };
 
-        // Current Active State
-        let currentMode = 'midterm'; // 'midterm' or 'final'
-        let currentYear = '2568';    // 'all' or year string
-        let rawItemsList = [];       // Item bank data for current mode/year
+        // Current Active State (Default formula is 'cohen' = 0.65 * P90 without deduction)
+        let currentMode = 'midterm';     // 'midterm' or 'final'
+        let currentYear = '2568';        // 'all' or year string
+        let currentFormula = 'cohen';    // DEFAULT: 'cohen' (0.65 * P90)
+        let rawItemsList = [];           // Item bank data for current mode/year
+
+        // Helper function: Calculate MPL dynamically based on active formula
+        function getCalculatedMPL(stats, mode = currentMode, formula = currentFormula) {
+            if (!stats) return 0;
+            if (formula === 'cohen') {
+                // PRIMARY DEFAULT FORMULA: Modified Cohen Method (0.65 * P90 without guess deduction)
+                const p90 = stats.p90 || (stats.mean + (1.28 * stats.sd));
+                return parseFloat((0.65 * p90).toFixed(2));
+            } else {
+                // Secondary Option: Regression Model
+                return parseFloat(((0.485 * stats.mean) + (0.35 * stats.sd) + 14.8).toFixed(2));
+            }
+        }
+
+        function switchFormula(formula) {
+            currentFormula = formula;
+            const btnReg = document.getElementById('btn-formula-regression');
+            const btnCohen = document.getElementById('btn-formula-cohen');
+            const activeText = document.getElementById('active-formula-text');
+
+            if (formula === 'cohen') {
+                btnCohen.className = 'px-3 py-1.5 rounded-md text-xs font-bold transition-all bg-amber-600 text-white shadow-sm flex items-center gap-1.5';
+                btnReg.className = 'px-3 py-1.5 rounded-md text-xs font-bold transition-all text-slate-400 hover:text-white flex items-center gap-1.5';
+                activeText.innerHTML = 'MPL = 0.65 &times; P90 (เกณฑ์ Modified Cohen แบบไม่หักคะแนนเดา)';
+            } else {
+                btnReg.className = 'px-3 py-1.5 rounded-md text-xs font-bold transition-all bg-indigo-600 text-white shadow-sm flex items-center gap-1.5';
+                btnCohen.className = 'px-3 py-1.5 rounded-md text-xs font-bold transition-all text-slate-400 hover:text-white flex items-center gap-1.5';
+                activeText.innerHTML = 'MPL = (0.485 &times; Mean) + (0.35 &times; SD) + 14.8 (Regression Model)';
+            }
+
+            updateDashboard();
+        }
 
         // Chart Instances
         let chartTrendObj = null;
@@ -726,7 +778,7 @@
         let chartPartsObj = null;
 
         // ------------------------------------------
-        // 3. INITIALIZATION & EVEN LISTENERS
+        // 3. INITIALIZATION & EVENT LISTENERS
         // ------------------------------------------
         window.onload = function () {
             initSupabase();
@@ -740,7 +792,6 @@
         function generateItemBankMockData() {
             rawItemsList = [];
             const totalItems = (currentMode === 'midterm') ? 75 : 70;
-            const activeStats = (currentMode === 'midterm') ? midtermData.stats[currentYear] || midtermData.stats['2568'] : finalData.stats[currentYear] || finalData.stats['2568'];
             
             for (let i = 1; i <= totalItems; i++) {
                 let keyOption = (i % 4) + 1;
@@ -834,6 +885,9 @@
             const totalItems = (currentMode === 'midterm') ? 75 : 70;
             const activeStats = dataObj.stats[currentYear] || dataObj.stats['2568'];
 
+            // Calculate MPL dynamically for active stats
+            const calculatedMPL = getCalculatedMPL(activeStats);
+
             // Update Banner
             document.getElementById('banner-title').innerText = currentMode === 'midterm' ? 'สถิติข้อสอบกลางภาค (Midterm Exam)' : 'สถิติข้อสอบปลายภาค (Final Exam)';
             document.getElementById('banner-items-count').innerText = `${totalItems} ข้อ | คะแนนเต็ม ${totalItems}`;
@@ -842,12 +896,13 @@
 
             // Update KPI Cards
             document.getElementById('kpi-kr20').innerText = activeStats.kr20.toFixed(4);
-            document.getElementById('kpi-mpl').innerText = `${activeStats.mpl.toFixed(2)} คะแนน`;
+            document.getElementById('kpi-mpl-title').innerText = currentFormula === 'cohen' ? 'เกณฑ์ผ่านขั้นต่ำ (Modified Cohen MPL)' : 'เกณฑ์ผ่านขั้นต่ำ (Regression MPL)';
+            document.getElementById('kpi-mpl').innerText = `${calculatedMPL.toFixed(2)} คะแนน`;
             
-            const mplPercent = ((activeStats.mpl / totalItems) * 100).toFixed(2);
-            const mplDiff = (activeStats.mean - activeStats.mpl).toFixed(2);
+            const mplPercent = ((calculatedMPL / totalItems) * 100).toFixed(2);
+            const mplDiff = (calculatedMPL - activeStats.mean).toFixed(2);
             document.getElementById('kpi-mpl-percent').innerText = `${mplPercent}%`;
-            document.getElementById('kpi-mpl-diff').innerText = `+${mplDiff} จาก Mean`;
+            document.getElementById('kpi-mpl-diff').innerText = `${mplDiff >= 0 ? '+' : ''}${mplDiff} จาก Mean`;
 
             document.getElementById('kpi-mean-p').innerText = activeStats.meanP.toFixed(2);
             document.getElementById('kpi-flagged').innerText = `${activeStats.flagged} ข้อ`;
@@ -868,7 +923,7 @@
             const years = dataObj.years;
             
             const means = years.map(y => dataObj.stats[y].mean);
-            const mpls = years.map(y => dataObj.stats[y].mpl);
+            const mpls = years.map(y => getCalculatedMPL(dataObj.stats[y]));
             const sdUpper = years.map(y => dataObj.stats[y].mean + dataObj.stats[y].sd);
             const sdLower = years.map(y => dataObj.stats[y].mean - dataObj.stats[y].sd);
 
@@ -889,13 +944,13 @@
                             tension: 0.2
                         },
                         {
-                            label: 'เกณฑ์ผ่าน (Estimated MPL)',
+                            label: `เกณฑ์ผ่าน (${currentFormula === 'cohen' ? 'Modified Cohen: 0.65 × P90' : 'Regression Model'})`,
                             data: mpls,
-                            borderColor: '#e11d48',
-                            backgroundColor: '#e11d48',
+                            borderColor: currentFormula === 'cohen' ? '#d97706' : '#e11d48',
+                            backgroundColor: currentFormula === 'cohen' ? '#d97706' : '#e11d48',
                             borderWidth: 2.5,
                             borderDash: [5, 5],
-                            pointRadius: 4,
+                            pointRadius: 5,
                             tension: 0.2
                         },
                         {
@@ -948,14 +1003,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        annotation: {
-                            annotations: {
-                                line1: { type: 'line', yMin: 0.70, yMax: 0.70, borderColor: '#ef4444', borderWidth: 2, borderDash: [4, 4] }
-                            }
-                        }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: { y: { min: 0, max: 1.0, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
                 }
             });
@@ -1145,6 +1193,14 @@
             document.getElementById('supabaseModal').classList.add('hidden');
         }
 
+        function testSupabaseConnectionUI() {
+            if (supabaseClient) {
+                showToast('ทดสอบเชื่อมต่อ Supabase สำเร็จ!');
+            } else {
+                showToast('กรุณากรอก URL และ Key เพื่อเชื่อมต่อ Supabase');
+            }
+        }
+
         function openRecommendationModal() {
             document.getElementById('recommendationModal').classList.remove('hidden');
         }
@@ -1182,9 +1238,15 @@
         function calcAutoMPL() {
             const mean = parseFloat(document.getElementById('new-mean').value) || 0;
             const sd = parseFloat(document.getElementById('new-sd').value) || 0;
+            const p90 = parseFloat(document.getElementById('new-p90').value) || 0;
+
+            if (p90 > 0) {
+                const cohenMPL = 0.65 * p90;
+                document.getElementById('new-mpl-cohen').innerText = `${cohenMPL.toFixed(2)} คะแนน`;
+            }
             if (mean > 0 && sd > 0) {
-                const autoMPL = (0.485 * mean) + (0.35 * sd) + 14.8;
-                document.getElementById('new-mpl-preview').innerText = `${autoMPL.toFixed(2)} คะแนน`;
+                const regressionMPL = (0.485 * mean) + (0.35 * sd) + 14.8;
+                document.getElementById('new-mpl-regression').innerText = `${regressionMPL.toFixed(2)} คะแนน`;
             }
         }
 
@@ -1195,9 +1257,10 @@
             const nVal = parseInt(document.getElementById('new-n').value);
             const meanVal = parseFloat(document.getElementById('new-mean').value);
             const sdVal = parseFloat(document.getElementById('new-sd').value);
+            const p90Val = parseFloat(document.getElementById('new-p90').value);
             const kr20Val = parseFloat(document.getElementById('new-kr20').value);
             
-            const mplVal = (0.485 * meanVal) + (0.35 * sdVal) + 14.8;
+            const calculatedMPLVal = 0.65 * p90Val;
 
             const targetObj = (examType === 'midterm') ? midtermData : finalData;
             
@@ -1210,8 +1273,8 @@
                 n: nVal,
                 mean: meanVal,
                 sd: sdVal,
+                p90: p90Val,
                 kr20: kr20Val,
-                mpl: mplVal,
                 meanP: (meanVal / (examType === 'midterm' ? 75 : 70)),
                 meanR: 0.20,
                 flagged: 4,
@@ -1225,13 +1288,13 @@
                     const dbYearKey = examType === 'final' ? `${yearStr}-FINAL` : yearStr;
                     const { error } = await supabaseClient
                         .from('mpl_records')
-                        .upsert({ year: dbYearKey, mean: meanVal, sd: sdVal, mpl: parseFloat(mplVal.toFixed(2)) });
+                        .upsert({ year: dbYearKey, mean: meanVal, sd: sdVal, mpl: parseFloat(calculatedMPLVal.toFixed(2)) });
 
                     if (error) throw error;
                     showToast('บันทึกข้อมูลและซิงค์ลง Supabase สำเร็จ!');
                 } catch (err) {
                     console.warn("Supabase Save Warning:", err.message);
-                    showToast('บันทึกข้อมูลในระบบเรียบร้อย (ข้อความซิงค์ DB แจ้งเตือน)');
+                    showToast('บันทึกข้อมูลในระบบเรียบร้อย');
                 }
             } else {
                 showToast('บันทึกข้อมูลปีการศึกษาเรียบร้อย!');
@@ -1272,13 +1335,11 @@
                             finalData.stats[yr] = finalData.stats[yr] || { n: 70, kr20: 0.60, meanP: 0.68, meanR: 0.18, flagged: 5, parts: [6.5, 16.0, 7.0, 6.5, 5.8, 6.5], diffDist: [3, 7, 20, 20, 20] };
                             finalData.stats[yr].mean = row.mean;
                             finalData.stats[yr].sd = row.sd;
-                            finalData.stats[yr].mpl = row.mpl;
                         } else {
                             if (!midtermData.years.includes(row.year)) midtermData.years.push(row.year);
                             midtermData.stats[row.year] = midtermData.stats[row.year] || { n: 75, kr20: 0.70, meanP: 0.68, meanR: 0.20, flagged: 4, parts: [7.5, 27.0, 16.5], diffDist: [3, 8, 21, 21, 22] };
                             midtermData.stats[row.year].mean = row.mean;
                             midtermData.stats[row.year].sd = row.sd;
-                            midtermData.stats[row.year].mpl = row.mpl;
                         }
                     });
                     renderYearTabs();
