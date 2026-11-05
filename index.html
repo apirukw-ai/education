@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MPL Trend & Statistical Analysis Dashboard (Course 180432)</title>
+    <title>MPL Trend & Statistical Analysis Dashboard (2561-2568+)</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Prompt & Inter -->
@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- FontAwesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Supabase JS Client v2 CDN -->
+    <!-- Supabase JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         tailwind.config = {
@@ -46,21 +46,16 @@
             box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
         }
         .glass-header {
-            background: rgba(255, 255, 255, 0.92);
+            background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(12px);
         }
         .modal-backdrop {
             background-color: rgba(15, 23, 42, 0.5);
             backdrop-filter: blur(4px);
         }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: #f1f5f9; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between antialiased">
+<body class="min-h-screen flex flex-col justify-between">
 
     <!-- Toast Notification -->
     <div id="toast" class="fixed top-5 right-5 z-50 transform translate-x-full transition-transform duration-300 ease-in-out max-w-sm bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700">
@@ -68,68 +63,80 @@
         <div id="toast-message" class="text-xs font-medium">ทำรายการสำเร็จ</div>
     </div>
 
-    <!-- Header Navigation Bar -->
+    <!-- Header -->
     <header class="sticky top-0 z-40 glass-header border-b border-slate-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col lg:flex-row justify-between items-center gap-4">
-            
-            <!-- Branding Title -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-3">
-                <div class="bg-gradient-to-tr from-blue-600 to-indigo-700 text-white p-3 rounded-2xl shadow-md flex items-center justify-center">
+                <div class="bg-gradient-to-tr from-blue-600 to-indigo-600 text-white p-3 rounded-2xl shadow-md">
                     <i class="fa-solid fa-chart-line text-xl"></i>
                 </div>
                 <div>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <h1 class="text-lg sm:text-xl font-bold text-slate-800 tracking-tight">ระบบวิเคราะห์แนวโน้มคะแนนสอบ & เกณฑ์ผ่าน MPL</h1>
-                        <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-indigo-200">วิชา 180432</span>
-                    </div>
-                    <p class="text-xs text-slate-500">Laws and Ethics in Pharmacy | ชุดข้อมูลสถิติ พ.ศ. 2561 - 2568+</p>
+                    <h1 class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">ระบบวิเคราะห์แนวโน้มคะแนนสอบ & เกณฑ์ MPL</h1>
+                    <p class="text-xs sm:text-sm text-slate-500">รายวิชา 180432 (Laws and Ethics in Pharmacy) - ข้อมูล พ.ศ. 2561 - 2568+</p>
                 </div>
             </div>
 
-            <!-- Global Action & Navigation Buttons -->
+            <!-- Global Action Buttons -->
             <div class="flex flex-wrap items-center gap-2">
                 <!-- Navigation Button to Item Analysis Dashboard -->
-                <a href="item_analysis_dashboard.html" class="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-indigo-700 transition-all shadow-md transform hover:-translate-y-0.5">
+                <a href="item_analysis_dashboard.html" class="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-indigo-700 transition shadow-md">
                     <i class="fa-solid fa-list-check text-sm"></i>
-                    <span>วิเคราะห์ข้อสอบรายข้อ (Item Analysis)</span>
+                    วิเคราะห์ข้อสอบรายข้อ
                 </a>
 
-                <!-- Add New Year Button -->
                 <button onclick="openAddModal()" class="inline-flex items-center gap-2 px-3.5 py-2 bg-emerald-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-emerald-700 transition shadow-md">
                     <i class="fa-solid fa-plus text-sm"></i>
-                    <span>เพิ่มข้อมูลปีใหม่</span>
+                    เพิ่มข้อมูลปีใหม่
                 </button>
-
-                <!-- Reset Data Button -->
                 <button onclick="confirmResetData()" class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-50 transition shadow-sm">
                     <i class="fa-solid fa-rotate-left text-amber-500"></i>
-                    <span>รีเซ็ตตั้งต้น</span>
+                    รีเซ็ตตั้งต้น
                 </button>
-
-                <!-- CSV Export -->
                 <button onclick="exportToCSV()" class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-50 transition shadow-sm">
                     <i class="fa-solid fa-file-csv text-emerald-600"></i>
-                    <span>CSV</span>
+                    CSV
                 </button>
-
-                <!-- Print -->
                 <button onclick="window.print()" class="inline-flex items-center gap-2 px-3 py-2 bg-medical-700 rounded-xl text-xs sm:text-sm font-medium text-white hover:bg-medical-800 transition shadow-md">
                     <i class="fa-solid fa-print"></i>
-                    <span>พิมพ์</span>
+                    พิมพ์
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Main Content Area -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-grow space-y-6">
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow space-y-8">
         
-        <!-- Dashboard Filters & Controls Bar -->
-        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 card-shadow flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4">
+        <!-- Formula Switcher Banner -->
+        <div class="bg-gradient-to-r from-blue-900 to-slate-900 text-white p-4 sm:p-5 rounded-2xl shadow-md border border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="space-y-1">
+                <div class="flex items-center gap-2 text-xs font-semibold text-blue-400 uppercase tracking-wider">
+                    <i class="fa-solid fa-sliders"></i> เลือกสูตรคำนวณเกณฑ์ MPL ประจำระบบ
+                </div>
+                <h3 class="text-base sm:text-lg font-bold flex items-center gap-2" id="formula-display-title">
+                    🎯 Modified Cohen Method (0.65 × P90)
+                </h3>
+                <p class="text-xs text-slate-300" id="formula-display-desc">
+                    เกณฑ์หลักมาตรฐานวิชาชีพ: คำนวณจาก 65% ของคะแนนที่ Percentile 90 ($0.65 \times P_{90}$) โดยไม่หักคะแนนเดา
+                </p>
+            </div>
+
+            <div class="inline-flex p-1 bg-slate-800 rounded-xl border border-slate-700 gap-1 w-full md:w-auto">
+                <button id="btn-formula-cohen" onclick="switchFormula('cohen')" class="flex-1 md:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-md">
+                    🎯 Modified Cohen (0.65 × P90)
+                </button>
+                <button id="btn-formula-reg" onclick="switchFormula('regression')" class="flex-1 md:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white">
+                    📊 Dynamic Regression (OLS)
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Filters & Chart Controls -->
+        <div class="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 card-shadow flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4">
             
             <!-- Range Switcher -->
             <div>
-                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">เลือกช่วงปีการศึกษา</label>
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">เลือกช่วงปีการศึกษา</label>
                 <div class="inline-flex p-1 bg-slate-100 rounded-xl flex-wrap gap-1" id="range-btn-group">
                     <button id="btn-range-all" onclick="setYearRange('all')" class="range-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition bg-white text-medical-700 shadow-sm">
                         ทั้งหมด (<span id="range-all-text">2561-2568</span>)
@@ -143,69 +150,35 @@
                 </div>
             </div>
 
-            <!-- Standard Setting Formula Selector Toggle -->
-            <div>
-                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">สูตรคำนวณเกณฑ์ผ่านขั้นต่ำ (MPL Method)</label>
-                <div class="inline-flex p-1 bg-slate-100 rounded-xl gap-1 border border-slate-200">
-                    <button id="btn-formula-cohen" onclick="setFormulaMethod('cohen')" class="formula-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition bg-amber-600 text-white shadow-sm flex items-center gap-1.5">
-                        <i class="fa-solid fa-bullseye text-xs"></i>
-                        <span>🎯 Modified Cohen (0.65 × P90)</span>
-                    </button>
-                    <button id="btn-formula-regression" onclick="setFormulaMethod('regression')" class="formula-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
-                        <i class="fa-solid fa-calculator text-xs"></i>
-                        <span>📊 Empirical Regression</span>
-                    </button>
-                </div>
-            </div>
-
             <!-- Chart Type Switcher -->
             <div>
-                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">รูปแบบกราฟ</label>
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">รูปแบบกราฟ</label>
                 <div class="inline-flex p-1 bg-slate-100 rounded-xl gap-1">
                     <button id="btn-chart-line" onclick="setChartType('line')" class="chart-type-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition bg-white text-medical-700 shadow-sm">
-                        <i class="fa-solid fa-chart-line mr-1"></i> เส้น
+                        <i class="fa-solid fa-chart-line mr-1"></i> เส้น (Line)
                     </button>
                     <button id="btn-chart-bar" onclick="setChartType('bar')" class="chart-type-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition text-slate-600 hover:text-slate-900">
-                        <i class="fa-solid fa-chart-column mr-1"></i> แท่ง
+                        <i class="fa-solid fa-chart-column mr-1"></i> แท่ง (Bar)
                     </button>
                     <button id="btn-chart-combo" onclick="setChartType('combo')" class="chart-type-btn px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition text-slate-600 hover:text-slate-900">
-                        <i class="fa-solid fa-chart-simple mr-1"></i> ผสม
+                        <i class="fa-solid fa-chart-simple mr-1"></i> ผสม (Combo)
                     </button>
                 </div>
             </div>
 
         </div>
 
-        <!-- Banner Info for Active Standard Setting Formula -->
-        <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-4 text-white card-shadow flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border border-indigo-900/40">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-400/30 flex items-center justify-center text-lg">
-                    <i class="fa-solid fa-shield-halved"></i>
-                </div>
-                <div>
-                    <div class="text-xs text-amber-300 font-semibold uppercase tracking-wider">สูตรมาตรฐานที่เลือกใช้งานในปัจจุบัน (Primary Standard Setting):</div>
-                    <div class="text-sm sm:text-base font-bold text-white mt-0.5" id="active-formula-title">
-                        🎯 Modified Cohen Method: <span class="text-amber-300 font-mono">MPL = 0.65 &times; P90</span>
-                    </div>
-                </div>
-            </div>
-            <div class="text-xs text-slate-300 bg-white/10 px-3 py-1.5 rounded-xl border border-white/10" id="active-formula-desc">
-                เกณฑ์ผ่านคำนวณจาก 65% ของคะแนน Percentile ที่ 90 (แบบไม่หักคะแนนเดา)
-            </div>
-        </div>
-
-        <!-- KPI Cards Grid (4 Analytics Cards) -->
+        <!-- KPI Cards Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            
             <!-- Card 1: Latest MPL -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow relative overflow-hidden">
-                <div class="absolute -right-3 -bottom-3 opacity-10 text-amber-600 text-6xl">
+                <div class="absolute -right-3 -bottom-3 opacity-10 text-red-600 text-6xl">
                     <i class="fa-solid fa-flag-checkered"></i>
                 </div>
                 <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider" id="kpi-latest-year-title">เกณฑ์ MPL ปีล่าสุด (พ.ศ. 2568)</div>
-                <div id="kpi-latest-mpl" class="text-3xl font-extrabold text-amber-600 mt-2">51.79</div>
+                <div id="kpi-latest-mpl" class="text-3xl font-bold text-red-600 mt-2">51.79</div>
                 <div class="flex items-center gap-1.5 mt-2 text-xs" id="kpi-mpl-yoy-wrapper">
-                    <!-- YoY change badge -->
+                    <!-- YoY change text -->
                 </div>
             </div>
 
@@ -215,9 +188,9 @@
                     <i class="fa-solid fa-calculator"></i>
                 </div>
                 <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">MPL เฉลี่ยช่วงที่เลือก</div>
-                <div id="kpi-avg-mpl" class="text-3xl font-extrabold text-blue-600 mt-2">--</div>
+                <div id="kpi-avg-mpl" class="text-3xl font-bold text-blue-600 mt-2">50.03</div>
                 <div class="flex items-center gap-2 mt-2 text-xs text-slate-500">
-                    <span id="kpi-range-count">คำนวณจาก -- ปี</span>
+                    <span id="kpi-range-count">คำนวณจาก 8 ปี</span>
                 </div>
             </div>
 
@@ -227,33 +200,32 @@
                     <i class="fa-solid fa-award"></i>
                 </div>
                 <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">คะแนนสอบเฉลี่ย (Mean)</div>
-                <div id="kpi-avg-mean" class="text-3xl font-extrabold text-emerald-600 mt-2">--</div>
+                <div id="kpi-avg-mean" class="text-3xl font-bold text-emerald-600 mt-2">66.99</div>
                 <div class="flex items-center gap-2 mt-2 text-xs text-slate-500">
-                    <span id="kpi-max-mean-yr">สูงสุด: --</span>
+                    <span id="kpi-max-mean-yr">สูงสุดปี 2565: 71.76</span>
                 </div>
             </div>
 
             <!-- Card 4: Mean-MPL Buffer -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow relative overflow-hidden">
-                <div class="absolute -right-3 -bottom-3 opacity-10 text-indigo-600 text-6xl">
-                    <i class="fa-solid fa-gauge-high"></i>
+                <div class="absolute -right-3 -bottom-3 opacity-10 text-amber-500 text-6xl">
+                    <i class="fa-solid fa-shield-halved"></i>
                 </div>
                 <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">ส่วนต่างความปลอดภัย (Mean - MPL)</div>
-                <div id="kpi-avg-gap" class="text-3xl font-extrabold text-indigo-600 mt-2">--</div>
+                <div id="kpi-avg-gap" class="text-3xl font-bold text-amber-500 mt-2">16.96 คะแนน</div>
                 <div class="flex items-center gap-2 mt-2 text-xs text-slate-500">
                     <span>ระยะห่างเฉลี่ยจากเกณฑ์ผ่าน</span>
                 </div>
             </div>
-
         </div>
 
-        <!-- Main Dynamic Interactive Chart -->
+        <!-- Main Dynamic Chart -->
         <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow space-y-4">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
                 <div>
                     <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                         <i class="fa-solid fa-chart-gantt text-medical-600"></i>
-                        กราฟวิเคราะห์แนวโน้มสถิติคะแนนและเกณฑ์ผ่าน MPL
+                        กราฟวิเคราะห์แนวโน้มสถิติคะแนนและเกณฑ์ MPL
                     </h2>
                     <p class="text-xs text-slate-500">แสดงการเปรียบเทียบเชิงลึกรายปีระหว่าง Mean, SD, P90 และเกณฑ์ตัดสินผ่าน MPL</p>
                 </div>
@@ -263,13 +235,13 @@
                         <input type="checkbox" id="toggle-mean" checked onchange="toggleDataset(0)" class="rounded text-blue-600">
                         <span class="font-semibold">Mean (คะแนนเฉลี่ย)</span>
                     </label>
-                    <label class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 text-purple-700 rounded-lg cursor-pointer border border-purple-200">
-                        <input type="checkbox" id="toggle-p90" checked onchange="toggleDataset(1)" class="rounded text-purple-600">
-                        <span class="font-semibold">P90 (Percentile 90)</span>
-                    </label>
                     <label class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 rounded-lg cursor-pointer border border-amber-200">
-                        <input type="checkbox" id="toggle-sd" checked onchange="toggleDataset(2)" class="rounded text-amber-600">
-                        <span class="font-semibold">SD (ส่วนเบี่ยงเบน)</span>
+                        <input type="checkbox" id="toggle-sd" checked onchange="toggleDataset(1)" class="rounded text-amber-600">
+                        <span class="font-semibold">SD (การกระจายตัว)</span>
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 text-purple-700 rounded-lg cursor-pointer border border-purple-200">
+                        <input type="checkbox" id="toggle-p90" checked onchange="toggleDataset(2)" class="rounded text-purple-600">
+                        <span class="font-semibold">P90 (Percentile 90)</span>
                     </label>
                     <label class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-red-700 rounded-lg cursor-pointer border border-red-200">
                         <input type="checkbox" id="toggle-mpl" checked onchange="toggleDataset(3)" class="rounded text-red-600">
@@ -284,95 +256,98 @@
             </div>
         </div>
 
-        <!-- Insights and Estimator Tool Grid -->
+        <!-- Insights and Estimator Section -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             <!-- Insight Box -->
             <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 card-shadow space-y-4">
                 <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
                     <i class="fa-solid fa-lightbulb text-amber-500"></i>
-                    ข้อสังเกตและวิเคราะห์แนวโน้มเชิงสถิติ (Executive Insights)
+                    ข้อสังเกตและวิเคราะห์แนวโน้มข้อมูล (Executive Insights)
                 </h3>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-600">
                     <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
                         <div class="font-semibold text-slate-800 flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                            วิเคราะห์ Modified Cohen ($0.65 \times P_{90}$)
+                            <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                            วิเคราะห์เกณฑ์ MPL ปี 2568
                         </div>
                         <p class="text-xs leading-relaxed text-slate-600">
-                            การตั้งเกณฑ์ผ่านด้วยวิธี **Modified Cohen ($0.65 \times P_{90}$)** ช่วยปรับเกณฑ์ขั้นต่ำตามระดับความยากง่ายของข้อสอบในแต่ละปี โดยค่า MPL อยู่ในช่วง **46.81 (ต่ำสุดปี 2563)** ถึง **52.71 (สูงสุดปี 2566)**
+                            ในปี <strong>2568 เกณฑ์ MPL อยู่ที่ 51.79</strong> (คำนวณจาก $0.65 \times P_{90}$ ที่ $P_{90} = 79.68$) คะแนนเฉลี่ย (Mean) อยู่ที่ 69.41 และ SD อยู่ที่ 5.81 แสดงถึงระดับมาตรฐานวิชาชีพที่คงเส้นคงวา
                         </p>
                     </div>
 
                     <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
                         <div class="font-semibold text-slate-800 flex items-center gap-2">
                             <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                            เสถียรภาพของ Mean & P90 (2565-2568)
+                            เสถียรภาพของ Mean (2565-2568)
                         </div>
                         <p class="text-xs leading-relaxed text-slate-600">
-                            ผลสอบในช่วง 4 ปีหลังสุด (2565 - 2568) คะแนนเฉลี่ย (Mean) ทรงตัวอยู่ในระดับสูง **69.41 - 71.76 คะแนน** และค่า $P_{90}$ อยู่ในช่วง **78.20 - 81.09 คะแนน** ส่งผลให้เกณฑ์ MPL ยืนเหนือระดับ 50 คะแนนต่อเนื่อง
+                            ผลสอบ 4 ปีหลังสุด (2565 - 2568) คะแนนเฉลี่ย (Mean) ของนิสิตทรงตัวอยู่ในระดับสูงอย่างต่อเนื่องระหว่าง <strong>69.41 - 71.76 คะแนน</strong> และค่า $P_{90}$ อยู่ในช่วง 78.20 - 81.09
                         </p>
                     </div>
 
                     <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
                         <div class="font-semibold text-slate-800 flex items-center gap-2">
                             <span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-                            ความสัมพันธ์เชิงสถิติตามข้อมูลจริง
+                            อัตโนมัติ Dynamic Regression Model
                         </div>
-                        <p class="text-xs leading-relaxed text-slate-600">
-                            ค่า $P_{90}$ ย้อนหลังจริงอยู่ในช่วง **72.02 - 81.09 คะแนน** ซึ่งสะท้อนศักยภาพของนิสิตกลุ่ม Top 10% และเมื่อนำมาคำนวณ $0.65 \times P_{90}$ ให้ค่าตรงกับเกณฑ์ MPL ที่ใช้ตัดผ่านจริงทุกประการ
+                        <p class="text-xs leading-relaxed text-slate-600" id="insight-reg-text">
+                            เมื่อสลับไปใช้สูตร Regression ระบบจะคำนวณหาค่าสัมประสิทธิ์แบบ Real-time จากชุดข้อมูลจริง: <span class="font-mono font-semibold text-indigo-700">MPL = 0.67×Mean + 1.20×SD - 1.72</span> ($R^2 = 94.8\%$)
                         </p>
                     </div>
 
                     <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
                         <div class="font-semibold text-slate-800 flex items-center gap-2">
                             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                            การรองรับข้อมูลปีถัดไป (2569+)
+                            ความยืดหยุ่นของระบบจัดการ
                         </div>
                         <p class="text-xs leading-relaxed text-slate-600">
-                            ท่านสามารถกดปุ่ม **"+ เพิ่มข้อมูลปีใหม่"** เพื่อป้อนค่าสถิติคะแนนปีถัดไป (เช่น 2569) ระบบจะซิงค์ข้อมูลกับ Supabase Database และอัปเดตการวิเคราะห์ทันทีแบบ Real-time
+                            ท่านสามารถใช้ปุ่ม <strong>"+ เพิ่มข้อมูลปีใหม่"</strong> เพื่อป้อนข้อมูลคะแนนสอบของปี พ.ศ. ถัดไป (เช่น 2569) ระบบจะคำนวณสถิติและอัปเดตสมการ Regression ใหม่ให้อัตโนมัติทันที
                         </p>
                     </div>
                 </div>
             </div>
 
             <!-- Predictor Tool -->
-            <div class="bg-slate-900 text-white p-6 rounded-2xl card-shadow flex flex-col justify-between space-y-4 border border-slate-800">
+            <div class="bg-slate-900 text-white p-6 rounded-2xl card-shadow flex flex-col justify-between space-y-4">
                 <div>
                     <div class="flex items-center gap-2 text-amber-400 font-semibold text-sm">
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        เครื่องมือประมาณการ MPL (Estimator Calculator)
+                        เครื่องมือประมาณการ MPL
                     </div>
-                    <h4 class="text-base font-bold mt-1">คำนวณประเมินเกณฑ์ MPL ล่วงหน้า</h4>
-                    <p class="text-xs text-slate-400 mt-1">ป้อนค่า $P_{90}$ หรือประมาณการจาก Mean & SD เพื่อคำนวณเกณฑ์ MPL</p>
+                    <h4 class="text-lg font-bold mt-1">MPL Estimator Calculator</h4>
+                    <p class="text-xs text-slate-400 mt-1" id="estimator-sub-desc">คำนวณเกณฑ์ MPL ล่วงหน้าตามสูตรปัจจุบัน</p>
                 </div>
 
-                <div class="space-y-3 bg-slate-800/90 p-4 rounded-xl border border-slate-700">
-                    <div>
-                        <label class="block text-xs font-medium text-slate-300 mb-1">คาดการณ์คะแนน Percentile 90 ($P_{90}$)</label>
-                        <input type="number" id="sim-p90" value="79.68" step="0.01" oninput="calculateEstimatedMPL()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-bold text-amber-400 focus:outline-none focus:border-amber-500">
+                <div class="space-y-3 bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+                    <!-- Cohen Input (P90) -->
+                    <div id="estimator-cohen-inputs">
+                        <label class="block text-xs font-medium text-slate-300 mb-1">คะแนน Percentile 90 ($P_{90}$)</label>
+                        <input type="number" id="sim-p90" value="79.68" step="0.01" oninput="calculateEstimatedMPL()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-semibold text-purple-400 focus:outline-none focus:border-purple-500">
                     </div>
-                    <div class="grid grid-cols-2 gap-2 pt-1">
+
+                    <!-- Regression Inputs (Mean & SD) -->
+                    <div id="estimator-reg-inputs" class="space-y-2">
                         <div>
-                            <label class="block text-[11px] font-medium text-slate-400 mb-1">Mean (เสริม)</label>
-                            <input type="number" id="sim-mean" value="69.41" step="0.01" oninput="calcP90FromStats()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-blue-300">
+                            <label class="block text-xs font-medium text-slate-300 mb-1">คาดการณ์ Mean</label>
+                            <input type="number" id="sim-mean" value="69.41" step="0.01" oninput="calculateEstimatedMPL()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-semibold text-blue-400 focus:outline-none focus:border-blue-500">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-medium text-slate-400 mb-1">SD (เสริม)</label>
-                            <input type="number" id="sim-sd" value="5.81" step="0.01" oninput="calcP90FromStats()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-purple-300">
+                            <label class="block text-xs font-medium text-slate-300 mb-1">คาดการณ์ SD</label>
+                            <input type="number" id="sim-sd" value="5.81" step="0.01" oninput="calculateEstimatedMPL()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-semibold text-amber-400 focus:outline-none focus:border-amber-500">
                         </div>
                     </div>
 
-                    <div class="pt-2 border-t border-slate-700/80">
-                        <div class="text-xs text-slate-400">ประมาณการเกณฑ์ MPL ที่คำนวณได้:</div>
-                        <div id="sim-result-mpl" class="text-3xl font-black text-amber-400 mt-1">51.79</div>
-                        <div class="text-[11px] text-amber-300/80 mt-1" id="sim-method-text">* Modified Cohen Method: 0.65 &times; P90</div>
+                    <div class="pt-2 border-t border-slate-700">
+                        <div class="text-xs text-slate-400">ประมาณการเกณฑ์ MPL ที่ได้รับ:</div>
+                        <div id="sim-result-mpl" class="text-2xl font-extrabold text-red-400 mt-1">51.79</div>
+                        <div class="text-[11px] text-slate-500 mt-1" id="sim-formula-note">* คำนวณจาก Modified Cohen: 0.65 × P90</div>
                     </div>
                 </div>
 
-                <div class="text-[11px] text-slate-400 text-center font-mono">
-                    สูตรหลัก: <span class="text-amber-300">MPL = 0.65 &times; P90</span>
+                <div class="text-[11px] text-slate-400 text-center" id="sim-formula-caption">
+                    สูตรประเมิน: <span class="font-mono text-slate-300">MPL = 0.65 × P90</span>
                 </div>
             </div>
 
@@ -384,9 +359,9 @@
                 <div>
                     <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
                         <i class="fa-solid fa-table text-medical-600"></i>
-                        ตารางจัดการและสรุปข้อมูลสถิติรายปี (Historical Statistics Table)
+                        ตารางจัดการและสรุปข้อมูลสถิติรายปี (2561-2568+)
                     </h3>
-                    <p class="text-xs text-slate-500">แสดงรายการข้อมูลสถิติ $P_{90}$, Mean, SD และคำนวณเกณฑ์ผ่าน MPL ย้อนหลัง (2561-2568)</p>
+                    <p class="text-xs text-slate-500">แสดงข้อมูลสถิติคะแนนสอบ Mean, SD, P90 และเกณฑ์ MPL คำนวณตามสูตรปัจจุบัน</p>
                 </div>
                 <div class="flex items-center gap-3 w-full sm:w-auto">
                     <div class="relative w-full sm:w-48">
@@ -406,8 +381,8 @@
                             <th class="py-3.5 px-6">ปี พ.ศ.</th>
                             <th class="py-3.5 px-6 text-right">Mean (คะแนนเฉลี่ย)</th>
                             <th class="py-3.5 px-6 text-right">SD (ส่วนเบี่ยงเบน)</th>
-                            <th class="py-3.5 px-6 text-right text-purple-700 bg-purple-50/50">P90 (Percentile 90)</th>
-                            <th class="py-3.5 px-6 text-right text-amber-700 bg-amber-50/50">MPL (เกณฑ์ผ่าน)</th>
+                            <th class="py-3.5 px-6 text-right text-purple-700">P90 (Percentile 90)</th>
+                            <th class="py-3.5 px-6 text-right text-red-600">MPL (เกณฑ์ขั้นต่ำ)</th>
                             <th class="py-3.5 px-6 text-right">ส่วนต่าง (Mean - MPL)</th>
                             <th class="py-3.5 px-6 text-right">การเปลี่ยนแปลง YoY</th>
                             <th class="py-3.5 px-6 text-center">CV %</th>
@@ -415,7 +390,7 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-sm font-medium text-slate-700" id="table-body">
-                        <!-- Dynamic rows rendered via JS -->
+                        <!-- Dynamic rows -->
                     </tbody>
                 </table>
             </div>
@@ -426,8 +401,8 @@
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-6 mt-12">
         <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 space-y-1">
-            <p>© ระบบวิเคราะห์และนำเสนอแนวโน้ม MPL (Minimum Passing Level) - วิชา 180432 (2561-2568+)</p>
-            <p class="text-slate-400">พัฒนาด้วยสถิติจิตวิทยาการวัดผล (Psychometric Standard Setting: Modified Cohen Method)</p>
+            <p>© ระบบวิเคราะห์และนำเสนอแนวโน้ม MPL (Minimum Passing Level) - รายวิชา 180432</p>
+            <p class="text-slate-400">พัฒนาโดยระบบบริหารจัดการข้อมูลการประเมินผลทางการศึกษา</p>
         </div>
     </footer>
 
@@ -435,7 +410,7 @@
     <div id="addModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 modal-backdrop">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl border border-slate-100">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                     <i class="fa-solid fa-calendar-plus text-emerald-600"></i>
                     เพิ่มข้อมูลสถิติปีใหม่
                 </h3>
@@ -450,26 +425,31 @@
                     <input type="number" id="input-year" required min="2500" max="2600" placeholder="เช่น 2569" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-3 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">Mean <span class="text-red-500">*</span></label>
-                        <input type="number" id="input-mean" required step="0.01" min="0" max="100" placeholder="69.50" oninput="autoCalcP90InModal()" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <input type="number" id="input-mean" required step="0.01" min="0" max="100" placeholder="69.50" oninput="updateModalPreview()" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">SD <span class="text-red-500">*</span></label>
-                        <input type="number" id="input-sd" required step="0.01" min="0" max="50" placeholder="5.20" oninput="autoCalcP90InModal()" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <input type="number" id="input-sd" required step="0.01" min="0" max="50" placeholder="5.50" oninput="updateModalPreview()" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">P90 <span class="text-red-500">*</span></label>
+                        <input type="number" id="input-p90" required step="0.01" min="0" max="100" placeholder="79.50" oninput="updateModalPreview()" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">คะแนน Percentile 90 ($P_{90}$) <span class="text-red-500">*</span></label>
-                    <input type="number" id="input-p90" required step="0.01" min="0" max="100" placeholder="79.68" oninput="updateModalMPLPreview()" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm font-bold text-amber-700 bg-amber-50/50 border-amber-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
-                </div>
-
-                <!-- Live Auto Calculated Preview -->
-                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
-                    <span class="text-slate-500">คำนวณ MPL (0.65 &times; P90):</span>
-                    <strong class="text-amber-700 font-bold text-sm" id="modal-mpl-preview">0.00 คะแนน</strong>
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-1">
+                    <div class="text-slate-500">ผลการคำนวณ MPL อัตโนมัติ:</div>
+                    <div class="font-bold text-slate-800 flex justify-between">
+                        <span>Modified Cohen (0.65 × P90):</span>
+                        <span id="preview-mpl-cohen" class="text-indigo-600">--</span>
+                    </div>
+                    <div class="font-bold text-slate-800 flex justify-between">
+                        <span>Dynamic Regression Model:</span>
+                        <span id="preview-mpl-reg" class="text-emerald-600">--</span>
+                    </div>
                 </div>
 
                 <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
@@ -477,7 +457,7 @@
                         ยกเลิก
                     </button>
                     <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition shadow-md">
-                        บันทึกข้อมูลเข้า DB
+                        บันทึกข้อมูล
                     </button>
                 </div>
             </form>
@@ -507,20 +487,12 @@
 
     <!-- JavaScript Application Logic -->
     <script>
-        // --- Supabase Client Config ---
+        // --- Supabase Config ---
         const SUPABASE_URL = 'https://iproktvvetsbxxmpptuj.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjA1NTk0MTQzN30.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw';
-        let supabaseClient = null;
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjEwMjg3MTc0MX0.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        try {
-            if (window.supabase) {
-                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            }
-        } catch (err) {
-            console.warn('Supabase initialization warning:', err.message);
-        }
-
-        // Master Historical Dataset (2561 - 2568) with Exact User Figures
+        // Master Dataset (2561 - 2568) strictly aligned with exact course statistics
         const defaultMasterData = [
             { year: '2561', mean: 64.64, sd: 4.66, p90: 73.83, mpl: 47.99 },
             { year: '2562', mean: 64.63, sd: 5.71, p90: 73.46, mpl: 47.75 },
@@ -532,56 +504,39 @@
             { year: '2568', mean: 69.41, sd: 5.81, p90: 79.68, mpl: 51.79 }
         ];
 
-        // Global Active State
+        // Global State
         let masterData = [];
         let activeData = [];
+        let currentFormula = 'cohen'; // 'cohen' or 'regression'
         let currentRangeKey = 'all';
         let currentChartType = 'line';
-        let currentFormula = 'cohen'; // PRIMARY DEFAULT: 'cohen' (0.65 * P90)
         let chartInstance = null;
         let yearToDelete = null;
 
-        // Helper function: Calculate MPL dynamically based on formula method
-        function calculateMPLVal(item, formula = currentFormula) {
-            if (!item) return 0;
-            if (formula === 'cohen') {
-                // PRIMARY FORMULA: Modified Cohen Method (0.65 * P90)
-                if (item.mpl && formula === currentFormula) return parseFloat(item.mpl.toFixed(2));
-                const p90 = item.p90 || (item.mean + 1.28 * item.sd);
-                return parseFloat((0.65 * p90).toFixed(2));
-            } else {
-                // Empirical Regression Formula
-                return parseFloat(((0.485 * item.mean) + (0.35 * item.sd) + 14.8).toFixed(2));
-            }
-        }
+        // Current Dynamic Regression Coefficients
+        let regCoeffs = { b0: -1.7159, b1: 0.6722, b2: 1.2025, r2: 0.9483 };
 
         // Initialize App
         window.onload = function() {
             loadInitialData();
-            calculateEstimatedMPL();
         };
 
-        // Load Data from Supabase with Fallback
+        // Load Initial Data (from Supabase or local default)
         async function loadInitialData() {
             try {
-                if (supabaseClient) {
-                    const { data, error } = await supabaseClient
-                        .from('mpl_records')
-                        .select('*')
-                        .order('year', { ascending: true });
+                const { data, error } = await supabaseClient
+                    .from('mpl_records')
+                    .select('*')
+                    .order('year', { ascending: true });
 
-                    if (!error && data && data.length > 0) {
-                        // Map database records to master dataset
-                        masterData = data.map(d => ({
-                            year: d.year,
-                            mean: parseFloat(d.mean),
-                            sd: parseFloat(d.sd),
-                            p90: d.p90 ? parseFloat(d.p90) : parseFloat((d.mean + 1.28 * d.sd).toFixed(2)),
-                            mpl: d.mpl ? parseFloat(d.mpl) : parseFloat((0.65 * (d.p90 || (d.mean + 1.28 * d.sd))).toFixed(2))
-                        }));
-                    } else {
-                        masterData = JSON.parse(JSON.stringify(defaultMasterData));
-                    }
+                if (!error && data && data.length > 0) {
+                    masterData = data.map(item => ({
+                        year: String(item.year),
+                        mean: parseFloat(item.mean),
+                        sd: parseFloat(item.sd),
+                        p90: item.p90 ? parseFloat(item.p90) : parseFloat((item.mpl / 0.65).toFixed(2)),
+                        mpl: parseFloat(item.mpl)
+                    }));
                 } else {
                     masterData = JSON.parse(JSON.stringify(defaultMasterData));
                 }
@@ -591,6 +546,7 @@
             }
 
             sortMasterData();
+            computeCourseOLSRegression();
             applyCurrentRangeFilter();
             renderChart();
             updateKPIs();
@@ -598,34 +554,115 @@
             calculateEstimatedMPL();
         }
 
+        // Sort data chronologically
         function sortMasterData() {
             masterData.sort((a, b) => parseInt(a.year) - parseInt(b.year));
         }
 
-        // Standard Setting Formula Selector Handler
-        function setFormulaMethod(formula) {
-            currentFormula = formula;
-            
-            const btnCohen = document.getElementById('btn-formula-cohen');
-            const btnReg = document.getElementById('btn-formula-regression');
-            const titleEl = document.getElementById('active-formula-title');
-            const descEl = document.getElementById('active-formula-desc');
-            const simMethodText = document.getElementById('sim-method-text');
+        // --- Dynamic OLS Multiple Linear Regression Solver ---
+        // Calculates MPL = b1*Mean + b2*SD + b0 automatically from masterData
+        function computeCourseOLSRegression() {
+            const data = masterData;
+            if (!data || data.length < 3) {
+                regCoeffs = { b0: -1.7159, b1: 0.6722, b2: 1.2025, r2: 0.9483 };
+                return;
+            }
 
-            if (formula === 'cohen') {
-                btnCohen.className = 'formula-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition bg-amber-600 text-white shadow-sm flex items-center gap-1.5';
-                btnReg.className = 'formula-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5';
-                
-                titleEl.innerHTML = '🎯 Modified Cohen Method: <span class="text-amber-300 font-mono">MPL = 0.65 &times; P90</span>';
-                descEl.innerText = 'เกณฑ์ผ่านคำนวณจาก 65% ของคะแนน Percentile ที่ 90 (แบบไม่หักคะแนนเดา)';
-                simMethodText.innerHTML = '* Modified Cohen Method: 0.65 &times; P90';
+            let n = data.length;
+            let sum1 = n, sumM = 0, sumS = 0, sumY = 0;
+            let sumM2 = 0, sumS2 = 0, sumMS = 0;
+            let sumMY = 0, sumSY = 0;
+
+            data.forEach(d => {
+                let m = d.mean, s = d.sd, y = d.mpl;
+                sumM += m; sumS += s; sumY += y;
+                sumM2 += m * m; sumS2 += s * s; sumMS += m * s;
+                sumMY += m * y; sumSY += s * y;
+            });
+
+            // 3x3 System for [b0, b1, b2]
+            // [ sum1   sumM   sumS  ] [b0]   [sumY ]
+            // [ sumM   sumM2  sumMS ] [b1] = [sumMY]
+            // [ sumS   sumMS  sumS2 ] [b2]   [sumSY]
+            let a = sum1,  b = sumM,  c = sumS;
+            let d = sumM2, e = sumMS, f = sumS2;
+
+            let det = a * (d * f - e * e) - b * (b * f - c * e) + c * (b * e - c * d);
+
+            if (Math.abs(det) < 1e-9) {
+                regCoeffs = { b0: -1.7159, b1: 0.6722, b2: 1.2025, r2: 0.9483 };
+                return;
+            }
+
+            let inv11 = (d * f - e * e) / det, inv12 = -(b * f - c * e) / det, inv13 = (b * e - c * d) / det;
+            let inv21 = -(b * f - e * c) / det, inv22 = (a * f - c * c) / det, inv23 = -(a * e - b * c) / det;
+            let inv31 = (b * e - d * c) / det, inv32 = -(a * e - b * c) / det, inv33 = (a * d - b * b) / det;
+
+            let b0 = inv11 * sumY + inv12 * sumMY + inv13 * sumSY;
+            let b1 = inv21 * sumY + inv22 * sumMY + inv23 * sumSY;
+            let b2 = inv31 * sumY + inv32 * sumMY + inv33 * sumSY;
+
+            // Calculate R2
+            let meanY = sumY / n;
+            let ssTot = data.reduce((acc, d) => acc + Math.pow(d.mpl - meanY, 2), 0);
+            let ssRes = data.reduce((acc, d) => {
+                let pred = b0 + b1 * d.mean + b2 * d.sd;
+                return acc + Math.pow(d.mpl - pred, 2);
+            }, 0);
+            let r2 = ssTot > 0 ? (1 - ssRes / ssTot) : 1;
+
+            regCoeffs = { b0, b1, b2, r2 };
+
+            // Update UI banners
+            const textReg = `สมการ Regression จากข้อมูลจริง (${data.length} ปี): <span class="font-mono font-semibold text-indigo-700">MPL = ${b1.toFixed(2)}×Mean + ${b2.toFixed(2)}×SD ${b0 >= 0 ? '+' : ''}${b0.toFixed(2)}</span> (R² = ${(r2 * 100).toFixed(1)}%)`;
+            document.getElementById('insight-reg-text').innerHTML = textReg;
+
+            if (currentFormula === 'regression') {
+                document.getElementById('formula-display-desc').innerHTML = `สมการถดถอยเชิงเส้นพหุคูณจากการประมวลผลข้อมูลจริง (${data.length} ปี): <span class="font-mono bg-blue-900/60 px-1.5 py-0.5 rounded text-amber-300">MPL = ${b1.toFixed(2)}×Mean + ${b2.toFixed(2)}×SD ${b0 >= 0 ? '+' : ''}${b0.toFixed(2)}</span> (R² = ${(r2 * 100).toFixed(1)}%)`;
+            }
+        }
+
+        // Calculate MPL for an item based on active formula
+        function getItemMPL(item) {
+            if (currentFormula === 'cohen') {
+                return item.p90 ? parseFloat((0.65 * item.p90).toFixed(2)) : item.mpl;
             } else {
-                btnReg.className = 'formula-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition bg-indigo-600 text-white shadow-sm flex items-center gap-1.5';
-                btnCohen.className = 'formula-btn px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5';
-                
-                titleEl.innerHTML = '📊 Empirical Regression Model: <span class="text-indigo-300 font-mono">MPL = 0.485 &times; Mean + 0.35 &times; SD + 14.8</span>';
-                descEl.innerText = 'เกณฑ์ผ่านคำนวณถดถอยเชิงเส้นจากค่า Mean และ SD';
-                simMethodText.innerHTML = '* Empirical Regression: 0.485 &times; Mean + 0.35 &times; SD + 14.8';
+                let pred = regCoeffs.b1 * item.mean + regCoeffs.b2 * item.sd + regCoeffs.b0;
+                return parseFloat(pred.toFixed(2));
+            }
+        }
+
+        // Switch Formula Mode
+        function switchFormula(formulaKey) {
+            currentFormula = formulaKey;
+
+            const btnCohen = document.getElementById('btn-formula-cohen');
+            const btnReg = document.getElementById('btn-formula-reg');
+            const title = document.getElementById('formula-display-title');
+            const desc = document.getElementById('formula-display-desc');
+            const estNote = document.getElementById('sim-formula-note');
+            const estCaption = document.getElementById('sim-formula-caption');
+            const cohenInputs = document.getElementById('estimator-cohen-inputs');
+            const regInputs = document.getElementById('estimator-reg-inputs');
+
+            if (formulaKey === 'cohen') {
+                btnCohen.className = "flex-1 md:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-md";
+                btnReg.className = "flex-1 md:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white";
+                title.innerHTML = "🎯 Modified Cohen Method (0.65 × P90)";
+                desc.innerHTML = "เกณฑ์หลักมาตรฐานวิชาชีพ: คำนวณจาก 65% ของคะแนนที่ Percentile 90 ($0.65 \times P_{90}$) โดยไม่หักคะแนนเดา";
+                estNote.innerText = "* คำนวณจาก Modified Cohen: 0.65 × P90";
+                estCaption.innerHTML = 'สูตรประเมิน: <span class="font-mono text-slate-300">MPL = 0.65 × P90</span>';
+                cohenInputs.classList.remove('hidden');
+                regInputs.classList.add('hidden');
+            } else {
+                btnReg.className = "flex-1 md:flex-none px-4 py-2 rounded-lg text-xs font-bold transition bg-blue-600 text-white shadow-md";
+                btnCohen.className = "flex-1 md:flex-none px-4 py-2 rounded-lg text-xs font-bold transition text-slate-400 hover:text-white";
+                title.innerHTML = "📊 Dynamic Course Regression (OLS Model)";
+                desc.innerHTML = `สมการถดถอยเชิงเส้นพหุคูณจากการประมวลผลข้อมูลจริง (${masterData.length} ปี): <span class="font-mono bg-blue-900/60 px-1.5 py-0.5 rounded text-amber-300">MPL = ${regCoeffs.b1.toFixed(2)}×Mean + ${regCoeffs.b2.toFixed(2)}×SD ${regCoeffs.b0 >= 0 ? '+' : ''}${regCoeffs.b0.toFixed(2)}</span> (R² = ${(regCoeffs.r2 * 100).toFixed(1)}%)`;
+                estNote.innerText = `* คำนวณจาก Dynamic OLS Regression (R² = ${(regCoeffs.r2 * 100).toFixed(1)}%)`;
+                estCaption.innerHTML = `สูตรประเมิน: <span class="font-mono text-slate-300">MPL = ${regCoeffs.b1.toFixed(2)}×Mean + ${regCoeffs.b2.toFixed(2)}×SD ${regCoeffs.b0 >= 0 ? '+' : ''}${regCoeffs.b0.toFixed(2)}</span>`;
+                cohenInputs.classList.add('hidden');
+                regInputs.classList.remove('hidden');
             }
 
             updateChart();
@@ -697,9 +734,9 @@
 
             const labels = activeData.map(d => `พ.ศ. ${d.year}`);
             const meanValues = activeData.map(d => d.mean);
-            const p90Values = activeData.map(d => d.p90 || parseFloat((d.mean + 1.28 * d.sd).toFixed(2)));
             const sdValues = activeData.map(d => d.sd);
-            const mplValues = activeData.map(d => calculateMPLVal(d));
+            const p90Values = activeData.map(d => d.p90);
+            const mplValues = activeData.map(d => getItemMPL(d));
 
             let datasets = [];
 
@@ -709,59 +746,60 @@
                         label: 'Mean (คะแนนเฉลี่ย)',
                         data: meanValues,
                         borderColor: '#2563eb',
-                        backgroundColor: 'rgba(37, 99, 235, 0.06)',
+                        backgroundColor: 'rgba(37, 99, 235, 0.08)',
                         borderWidth: 3,
                         pointBackgroundColor: '#2563eb',
                         pointRadius: 5,
-                        tension: 0.25,
-                        fill: true
-                    },
-                    {
-                        label: 'P90 (Percentile 90)',
-                        data: p90Values,
-                        borderColor: '#9333ea',
-                        backgroundColor: 'transparent',
-                        borderWidth: 2.5,
-                        borderDash: [4, 4],
-                        pointBackgroundColor: '#9333ea',
-                        pointRadius: 5,
-                        tension: 0.25
+                        tension: 0.3,
+                        fill: false
                     },
                     {
                         label: 'SD (ส่วนเบี่ยงเบน)',
                         data: sdValues,
                         borderColor: '#f97316',
-                        backgroundColor: 'transparent',
-                        borderWidth: 2.5,
+                        backgroundColor: 'rgba(249, 115, 22, 0.08)',
+                        borderWidth: 3,
                         pointBackgroundColor: '#f97316',
-                        pointRadius: 4,
-                        tension: 0.25
+                        pointRadius: 5,
+                        tension: 0.3,
+                        fill: false
                     },
                     {
-                        label: `MPL (${currentFormula === 'cohen' ? '0.65 × P90' : 'Regression'})`,
+                        label: 'P90 (Percentile 90)',
+                        data: p90Values,
+                        borderColor: '#9333ea',
+                        backgroundColor: 'rgba(147, 51, 234, 0.08)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#9333ea',
+                        pointRadius: 5,
+                        tension: 0.3,
+                        fill: false
+                    },
+                    {
+                        label: `MPL (${currentFormula === 'cohen' ? 'Modified Cohen' : 'Regression'})`,
                         data: mplValues,
-                        borderColor: currentFormula === 'cohen' ? '#d97706' : '#dc2626',
-                        backgroundColor: currentFormula === 'cohen' ? 'rgba(217, 119, 6, 0.12)' : 'rgba(220, 38, 38, 0.12)',
-                        borderWidth: 3.5,
-                        pointBackgroundColor: currentFormula === 'cohen' ? '#d97706' : '#dc2626',
+                        borderColor: '#dc2626',
+                        backgroundColor: 'rgba(220, 38, 38, 0.08)',
+                        borderWidth: 4,
+                        pointBackgroundColor: '#dc2626',
                         pointRadius: 6,
-                        tension: 0.25,
+                        tension: 0.3,
                         fill: true
                     }
                 ];
             } else if (currentChartType === 'bar') {
                 datasets = [
-                    { label: 'Mean (คะแนนเฉลี่ย)', data: meanValues, backgroundColor: '#3b82f6', borderRadius: 6 },
-                    { label: 'P90 (Percentile 90)', data: p90Values, backgroundColor: '#a855f7', borderRadius: 6 },
-                    { label: 'SD (ส่วนเบี่ยงเบน)', data: sdValues, backgroundColor: '#f97316', borderRadius: 6 },
-                    { label: 'MPL (เกณฑ์ผ่าน)', data: mplValues, backgroundColor: currentFormula === 'cohen' ? '#d97706' : '#ef4444', borderRadius: 6 }
+                    { label: 'Mean', data: meanValues, backgroundColor: '#3b82f6', borderRadius: 6 },
+                    { label: 'SD', data: sdValues, backgroundColor: '#f97316', borderRadius: 6 },
+                    { label: 'P90', data: p90Values, backgroundColor: '#a855f7', borderRadius: 6 },
+                    { label: 'MPL', data: mplValues, backgroundColor: '#ef4444', borderRadius: 6 }
                 ];
             } else if (currentChartType === 'combo') {
                 datasets = [
-                    { type: 'bar', label: 'Mean (คะแนนเฉลี่ย)', data: meanValues, backgroundColor: 'rgba(59, 130, 246, 0.75)', borderRadius: 6 },
-                    { type: 'bar', label: 'P90 (Percentile 90)', data: p90Values, backgroundColor: 'rgba(168, 85, 247, 0.75)', borderRadius: 6 },
-                    { type: 'bar', label: 'SD (ส่วนเบี่ยงเบน)', data: sdValues, backgroundColor: 'rgba(249, 115, 22, 0.8)', borderRadius: 6 },
-                    { type: 'line', label: 'MPL (เกณฑ์ผ่าน)', data: mplValues, borderColor: '#d97706', borderWidth: 4, pointRadius: 6, tension: 0.25 }
+                    { type: 'bar', label: 'Mean', data: meanValues, backgroundColor: 'rgba(59, 130, 246, 0.75)', borderRadius: 6 },
+                    { type: 'bar', label: 'P90', data: p90Values, backgroundColor: 'rgba(168, 85, 247, 0.75)', borderRadius: 6 },
+                    { type: 'line', label: 'SD', data: sdValues, borderColor: '#f97316', borderWidth: 3, pointRadius: 5, tension: 0.3 },
+                    { type: 'line', label: 'MPL', data: mplValues, borderColor: '#dc2626', borderWidth: 4, pointRadius: 6, tension: 0.3 }
                 ];
             }
 
@@ -789,8 +827,9 @@
                                 afterBody: context => {
                                     const index = context[0].dataIndex;
                                     const item = activeData[index];
-                                    const mplVal = calculateMPLVal(item);
-                                    return item ? `-------------------\nส่วนต่าง (Mean - MPL): ${(item.mean - mplVal).toFixed(2)} คะแนน` : '';
+                                    const mplVal = getItemMPL(item);
+                                    return item ? `-------------------
+ส่วนต่าง (Mean - MPL): ${(item.mean - mplVal).toFixed(2)} คะแนน` : '';
                                 }
                             }
                         }
@@ -798,7 +837,7 @@
                     scales: {
                         y: {
                             min: 0,
-                            max: 90,
+                            max: 95,
                             grid: { color: '#f1f5f9' },
                             ticks: { font: { family: 'Prompt', size: 11 } }
                         },
@@ -811,8 +850,8 @@
             });
 
             document.getElementById('toggle-mean').checked = true;
-            document.getElementById('toggle-p90').checked = true;
             document.getElementById('toggle-sd').checked = true;
+            document.getElementById('toggle-p90').checked = true;
             document.getElementById('toggle-mpl').checked = true;
         }
 
@@ -820,10 +859,10 @@
             if (!chartInstance) return;
             chartInstance.data.labels = activeData.map(d => `พ.ศ. ${d.year}`);
             chartInstance.data.datasets[0].data = activeData.map(d => d.mean);
-            chartInstance.data.datasets[1].data = activeData.map(d => d.p90 || parseFloat((d.mean + 1.28 * d.sd).toFixed(2)));
-            chartInstance.data.datasets[2].data = activeData.map(d => d.sd);
-            chartInstance.data.datasets[3].data = activeData.map(d => calculateMPLVal(d));
-            chartInstance.data.datasets[3].label = `MPL (${currentFormula === 'cohen' ? '0.65 × P90' : 'Regression'})`;
+            chartInstance.data.datasets[1].data = activeData.map(d => d.sd);
+            chartInstance.data.datasets[2].data = activeData.map(d => d.p90);
+            chartInstance.data.datasets[3].data = activeData.map(d => getItemMPL(d));
+            chartInstance.data.datasets[3].label = `MPL (${currentFormula === 'cohen' ? 'Modified Cohen' : 'Regression'})`;
             chartInstance.update();
         }
 
@@ -845,16 +884,16 @@
             }
 
             const latestItem = activeData[activeData.length - 1];
-            const latestMPL = calculateMPLVal(latestItem);
+            const latestMPL = getItemMPL(latestItem);
 
             document.getElementById('kpi-latest-year-title').innerText = `เกณฑ์ MPL ปีล่าสุด (พ.ศ. ${latestItem.year})`;
             document.getElementById('kpi-latest-mpl').innerText = latestMPL.toFixed(2);
 
-            // YoY indicator for latest year
+            // YoY indicator
             const yoyWrapper = document.getElementById('kpi-mpl-yoy-wrapper');
             if (activeData.length >= 2) {
                 const prevItem = activeData[activeData.length - 2];
-                const prevMPL = calculateMPLVal(prevItem);
+                const prevMPL = getItemMPL(prevItem);
                 const diff = (latestMPL - prevMPL).toFixed(2);
                 if (diff > 0) {
                     yoyWrapper.innerHTML = `<span class="text-emerald-600 font-semibold"><i class="fa-solid fa-arrow-up text-xs"></i> +${diff}</span> <span class="text-slate-500">เทียบกับปี ${prevItem.year}</span>`;
@@ -868,21 +907,22 @@
             }
 
             const count = activeData.length;
-            const sumMPL = activeData.reduce((acc, curr) => acc + calculateMPLVal(curr), 0);
+            const sumMPL = activeData.reduce((acc, curr) => acc + getItemMPL(curr), 0);
             const sumMean = activeData.reduce((acc, curr) => acc + curr.mean, 0);
             
             document.getElementById('kpi-avg-mpl').innerText = (sumMPL / count).toFixed(2);
-            document.getElementById('kpi-range-count').innerText = `เฉลี่ยจากข้อมูล ${count} ปี`;
+            document.getElementById('kpi-range-count').innerText = `คำนวณจาก ${count} ปี`;
+
             document.getElementById('kpi-avg-mean').innerText = (sumMean / count).toFixed(2);
 
             const maxMeanObj = [...activeData].sort((a, b) => b.mean - a.mean)[0];
-            document.getElementById('kpi-max-mean-yr').innerText = `สูงสุดปี ${maxMeanObj.year}: ${maxMeanObj.mean}`;
+            document.getElementById('kpi-max-mean-yr').innerText = `สูงสุดปี ${maxMeanObj.year}: ${maxMeanObj.mean.toFixed(2)}`;
 
-            const avgGap = (activeData.reduce((acc, curr) => acc + (curr.mean - calculateMPLVal(curr)), 0) / count).toFixed(2);
+            const avgGap = (activeData.reduce((acc, curr) => acc + (curr.mean - getItemMPL(curr)), 0) / count).toFixed(2);
             document.getElementById('kpi-avg-gap').innerText = `${avgGap} คะแนน`;
         }
 
-        // Render Table
+        // Render Table with Action Buttons
         function renderTable() {
             const tbody = document.getElementById('table-body');
             tbody.innerHTML = '';
@@ -893,14 +933,13 @@
             }
 
             masterData.forEach((item, idx) => {
-                const mplVal = calculateMPLVal(item);
+                const mplVal = getItemMPL(item);
                 const gap = (item.mean - mplVal).toFixed(2);
                 const cv = ((item.sd / item.mean) * 100).toFixed(2);
-                const p90Val = item.p90 ? item.p90.toFixed(2) : (item.mean + 1.28 * item.sd).toFixed(2);
 
                 let yoyHTML = '<span class="text-slate-400">-</span>';
                 if (idx > 0) {
-                    const prevMPL = calculateMPLVal(masterData[idx - 1]);
+                    const prevMPL = getItemMPL(masterData[idx - 1]);
                     const diff = (mplVal - prevMPL).toFixed(2);
                     if (diff > 0) {
                         yoyHTML = `<span class="text-emerald-600 font-semibold flex items-center justify-end gap-1"><i class="fa-solid fa-arrow-up text-xs"></i> +${diff}</span>`;
@@ -917,9 +956,9 @@
                     <td class="py-3.5 px-6 font-bold text-slate-800">พ.ศ. ${item.year}</td>
                     <td class="py-3.5 px-6 text-right font-semibold text-blue-700">${item.mean.toFixed(2)}</td>
                     <td class="py-3.5 px-6 text-right font-medium text-amber-600">${item.sd.toFixed(2)}</td>
-                    <td class="py-3.5 px-6 text-right font-bold text-purple-700 bg-purple-50/30">${p90Val}</td>
-                    <td class="py-3.5 px-6 text-right font-bold text-amber-700 bg-amber-50/30">${mplVal.toFixed(2)}</td>
-                    <td class="py-3.5 px-6 text-right font-semibold text-indigo-700">${gap}</td>
+                    <td class="py-3.5 px-6 text-right font-bold text-purple-700 bg-purple-50/20">${item.p90.toFixed(2)}</td>
+                    <td class="py-3.5 px-6 text-right font-bold text-red-600 bg-red-50/30">${mplVal.toFixed(2)}</td>
+                    <td class="py-3.5 px-6 text-right font-semibold text-emerald-700">${gap}</td>
                     <td class="py-3.5 px-6 text-right">${yoyHTML}</td>
                     <td class="py-3.5 px-6 text-center text-xs font-mono text-slate-500">${cv}%</td>
                     <td class="py-3.5 px-6 text-center">
@@ -938,8 +977,28 @@
             const rows = document.querySelectorAll('#table-body tr');
             rows.forEach(row => {
                 const yearText = row.cells[0]?.innerText.toLowerCase() || '';
-                row.style.display = yearText.includes(query) ? '' : 'none';
+                if (yearText.includes(query)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
             });
+        }
+
+        // MPL Estimator Calculator
+        function calculateEstimatedMPL() {
+            let estimatedMPL = 0;
+            if (currentFormula === 'cohen') {
+                const p90 = parseFloat(document.getElementById('sim-p90').value) || 0;
+                estimatedMPL = 0.65 * p90;
+            } else {
+                const mean = parseFloat(document.getElementById('sim-mean').value) || 0;
+                const sd = parseFloat(document.getElementById('sim-sd').value) || 0;
+                estimatedMPL = regCoeffs.b1 * mean + regCoeffs.b2 * sd + regCoeffs.b0;
+            }
+
+            if (estimatedMPL < 0) estimatedMPL = 0;
+            document.getElementById('sim-result-mpl').innerText = estimatedMPL.toFixed(2);
         }
 
         // ADD NEW YEAR LOGIC
@@ -949,28 +1008,24 @@
                 const nextYr = parseInt(masterData[masterData.length - 1].year) + 1;
                 document.getElementById('input-year').value = nextYr;
             }
+            updateModalPreview();
         }
 
         function closeAddModal() {
             document.getElementById('addModal').classList.add('hidden');
             document.getElementById('add-year-form').reset();
-            document.getElementById('modal-mpl-preview').innerText = '0.00 คะแนน';
         }
 
-        function autoCalcP90InModal() {
-            const mean = parseFloat(document.getElementById('input-mean').value) || 0;
-            const sd = parseFloat(document.getElementById('input-sd').value) || 0;
-            if (mean > 0) {
-                const estP90 = mean + (1.28 * sd);
-                document.getElementById('input-p90').value = estP90.toFixed(2);
-                updateModalMPLPreview();
-            }
-        }
+        function updateModalPreview() {
+            const meanVal = parseFloat(document.getElementById('input-mean').value) || 0;
+            const sdVal = parseFloat(document.getElementById('input-sd').value) || 0;
+            const p90Val = parseFloat(document.getElementById('input-p90').value) || 0;
 
-        function updateModalMPLPreview() {
-            const p90 = parseFloat(document.getElementById('input-p90').value) || 0;
-            const mpl = 0.65 * p90;
-            document.getElementById('modal-mpl-preview').innerText = `${mpl.toFixed(2)} คะแนน`;
+            const mplCohen = 0.65 * p90Val;
+            const mplReg = regCoeffs.b1 * meanVal + regCoeffs.b2 * sdVal + regCoeffs.b0;
+
+            document.getElementById('preview-mpl-cohen').innerText = p90Val > 0 ? mplCohen.toFixed(2) : '--';
+            document.getElementById('preview-mpl-reg').innerText = (meanVal > 0 && sdVal > 0) ? mplReg.toFixed(2) : '--';
         }
 
         async function handleAddYear(e) {
@@ -985,30 +1040,29 @@
                 return;
             }
 
-            const calculatedMPL = 0.65 * p90Val;
+            const mplVal = parseFloat((0.65 * p90Val).toFixed(2));
 
-            if (supabaseClient) {
-                const { error } = await supabaseClient
-                    .from('mpl_records')
-                    .insert([{ 
-                        year: yearVal, 
-                        mean: meanVal, 
-                        sd: sdVal, 
-                        p90: p90Val,
-                        mpl: parseFloat(calculatedMPL.toFixed(2))
-                    }]);
+            const { error } = await supabaseClient
+                .from('mpl_records')
+                .insert([{ 
+                    year: yearVal, 
+                    mean: meanVal, 
+                    sd: sdVal, 
+                    p90: p90Val,
+                    mpl: mplVal 
+                }]);
 
-                if (error) {
-                    showToast('บันทึกในระบบ แต่ Supabase ขัดข้อง: ' + error.message, 'error');
-                } else {
-                    showToast(`เพิ่มข้อมูลปี พ.ศ. ${yearVal} เรียบร้อยแล้ว`, 'success');
-                }
+            if (error) {
+                console.warn('Supabase insert warning:', error.message);
+                masterData.push({ year: yearVal, mean: meanVal, sd: sdVal, p90: p90Val, mpl: mplVal });
+                saveAndRefreshState();
+                closeAddModal();
+                showToast(`เพิ่มข้อมูลปี พ.ศ. ${yearVal} (Local) เรียบร้อยแล้ว`, 'success');
             } else {
+                closeAddModal();
                 showToast(`เพิ่มข้อมูลปี พ.ศ. ${yearVal} เรียบร้อยแล้ว`, 'success');
+                await loadInitialData();
             }
-
-            closeAddModal();
-            await loadInitialData();
         }
 
         // DELETE YEAR LOGIC
@@ -1026,64 +1080,41 @@
         async function executeDeleteYear() {
             if (!yearToDelete) return;
 
-            if (supabaseClient) {
-                const { error } = await supabaseClient
-                    .from('mpl_records')
-                    .delete()
-                    .eq('year', yearToDelete);
+            const { error } = await supabaseClient
+                .from('mpl_records')
+                .delete()
+                .eq('year', yearToDelete);
 
-                if (error) {
-                    showToast('เกิดข้อผิดพลาดในการลบข้อมูล: ' + error.message, 'error');
-                } else {
-                    showToast(`ลบข้อมูลปี ${yearToDelete} สำเร็จ`, 'success');
-                }
-            } else {
+            if (error) {
+                console.warn('Supabase delete warning:', error.message);
                 masterData = masterData.filter(d => d.year !== yearToDelete);
-                showToast(`ลบข้อมูลปี ${yearToDelete} สำเร็จ`, 'success');
+                saveAndRefreshState();
+                yearToDelete = null;
+                closeDeleteModal();
+                showToast('ลบข้อมูลเรียบร้อยแล้ว', 'success');
+            } else {
+                yearToDelete = null;
+                closeDeleteModal();
+                await loadInitialData();
+                showToast('ลบข้อมูลจากระบบเรียบร้อยแล้ว', 'success');
             }
-
-            yearToDelete = null;
-            closeDeleteModal();
-            await loadInitialData();
         }
 
-        // RESET DEFAULT DATASET
-        function confirmResetData() {
-            masterData = JSON.parse(JSON.stringify(defaultMasterData));
+        function saveAndRefreshState() {
             sortMasterData();
+            computeCourseOLSRegression();
             applyCurrentRangeFilter();
             updateChart();
             updateKPIs();
             renderTable();
             calculateEstimatedMPL();
-            showToast('รีเซ็ตข้อมูลเป็นชุดมาตรฐานเรียบร้อย', 'success');
         }
 
-        // MPL Predictor Calculator
-        function calcP90FromStats() {
-            const mean = parseFloat(document.getElementById('sim-mean').value) || 0;
-            const sd = parseFloat(document.getElementById('sim-sd').value) || 0;
-            if (mean > 0) {
-                const p90 = mean + (1.28 * sd);
-                document.getElementById('sim-p90').value = p90.toFixed(2);
-            }
-            calculateEstimatedMPL();
-        }
-
-        function calculateEstimatedMPL() {
-            const p90 = parseFloat(document.getElementById('sim-p90').value) || 0;
-            const mean = parseFloat(document.getElementById('sim-mean').value) || 0;
-            const sd = parseFloat(document.getElementById('sim-sd').value) || 0;
-
-            let estimatedMPL = 0;
-            if (currentFormula === 'cohen') {
-                estimatedMPL = 0.65 * p90;
-            } else {
-                estimatedMPL = (0.485 * mean) + (0.35 * sd) + 14.8;
-            }
-
-            if (estimatedMPL < 0) estimatedMPL = 0;
-            document.getElementById('sim-result-mpl').innerText = estimatedMPL.toFixed(2);
+        // RESET DEFAULT DATASET
+        function confirmResetData() {
+            masterData = JSON.parse(JSON.stringify(defaultMasterData));
+            saveAndRefreshState();
+            showToast('รีเซ็ตข้อมูลเป็นชุดมาตรฐาน 2561-2568 เรียบร้อย', 'success');
         }
 
         // CSV Export
@@ -1093,35 +1124,43 @@
                 return;
             }
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            csvContent += "ปี พ.ศ.,Mean (คะแนนเฉลี่ย),SD (ส่วนเบี่ยงเบน),P90 (Percentile 90),MPL (เกณฑ์ผ่าน),ส่วนต่าง (Mean - MPL)\n";
+            csvContent += "ปี พ.ศ.,Mean (คะแนนเฉลี่ย),SD (ส่วนเบี่ยงเบน),P90 (Percentile 90),MPL (เกณฑ์ผ่านขั้นต่ำ),ส่วนต่าง (Mean - MPL)\n";
 
             masterData.forEach(row => {
-                const mplVal = calculateMPLVal(row);
+                const mplVal = getItemMPL(row);
                 const gap = (row.mean - mplVal).toFixed(2);
-                const p90Val = row.p90 ? row.p90.toFixed(2) : (row.mean + 1.28 * row.sd).toFixed(2);
-                csvContent += `${row.year},${row.mean},${row.sd},${p90Val},${mplVal.toFixed(2)},${gap}\n`;
+                csvContent += `${row.year},${row.mean},${row.sd},${row.p90},${mplVal},${gap}\n`;
             });
 
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `MPL_Statistics_Course180432_${masterData[masterData.length - 1].year}.csv`);
+            link.setAttribute("download", `MPL_Statistics_2561_${masterData[masterData.length - 1].year}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
         }
 
-        // Toast Helper
+        // Toast Feedback Helper
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             const icon = document.getElementById('toast-icon');
             const msg = document.getElementById('toast-message');
 
             msg.innerText = message;
-            icon.className = type === 'success' ? 'fa-solid fa-circle-check text-emerald-400 text-lg' : 'fa-solid fa-circle-exclamation text-red-400 text-lg';
+            
+            if (type === 'success') {
+                icon.className = 'fa-solid fa-circle-check text-emerald-400 text-lg';
+            } else if (type === 'error') {
+                icon.className = 'fa-solid fa-circle-exclamation text-red-400 text-lg';
+            } else {
+                icon.className = 'fa-solid fa-circle-info text-blue-400 text-lg';
+            }
 
             toast.classList.remove('translate-x-full');
-            setTimeout(() => { toast.classList.add('translate-x-full'); }, 3000);
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000);
         }
     </script>
 </body>
