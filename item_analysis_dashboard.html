@@ -514,22 +514,22 @@
             renderTrendChart();
         }
 
-// ฟังก์ชันดึงปีการศึกษามาใส่ Dropdown อัตโนมัติ (การันตีปี 2560-2575 เป็นค่าพื้นฐานเสมอ)
+		// ฟังก์ชันดึงปีการศึกษามาใส่ Dropdown อัตโนมัติ (กำหนดปี 2561 - 2572 เป็นค่าพื้นฐาน)
         async function populateYearDropdown() {
             try {
                 const { data } = await supabaseClient
                     .from('mpl_item_analysis')
                     .select('year');
 
-                // กำหนดรายการปีการศึกษาพื้นฐานย้อนหลังและอนาคต (พ.ศ. 2560 - 2575)
-                const defaultYears = Array.from({length: 16}, (_, i) => String(2575 - i));
+                // กำหนดรายการปีการศึกษาพื้นฐาน (พ.ศ. 2561 - 2572)
+                const defaultYears = Array.from({length: 12}, (_, i) => String(2572 - i));
                 
                 let dbYears = [];
                 if (data && data.length > 0) {
                     dbYears = data.map(x => String(x.year).trim());
                 }
 
-                // รวมปีจาก Supabase และปีพื้นฐาน ตัดตัวซ้ำ แล้วเรียงจากมากไปน้อย
+                // รวมปีจาก Supabase และปีพื้นฐาน ตัดตัวซ้ำ แล้วเรียงจากมากไปน้อย (2572 down to 2561)
                 const allYears = [...new Set([...defaultYears, ...dbYears])].sort((a, b) => b - a);
                 const selectYear = document.getElementById('select-year');
                 const currentSelected = selectYear.value || '2568';
