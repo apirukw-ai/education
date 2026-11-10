@@ -474,9 +474,10 @@
         let trendFilterRound = 'all'; // Default to all rounds (รวม)
         let itemToDeleteId = null;
 
-        window.onload = function() {
-            loadItemData();
-        };
+    window.onload = async function() {
+		await populateYearDropdown(); // ดึงปีทั้งหมดมาใส่ Dropdown ก่อน
+		loadItemData();
+	};
 
         // Load items for selected year and round
         async function loadItemData() {
@@ -511,6 +512,39 @@
             populateSectionDropdown();
             applySectionFilter();
             renderTrendChart();
+        }
+
+// ฟังก์ชันดึงปีการศึกษามาใส่ Dropdown อัตโนมัติ (การันตีปี 2560-2575 เป็นค่าพื้นฐานเสมอ)
+        async function populateYearDropdown() {
+            try {
+                const { data } = await supabaseClient
+                    .from('mpl_item_analysis')
+                    .select('year');
+
+                // กำหนดรายการปีการศึกษาพื้นฐานย้อนหลังและอนาคต (พ.ศ. 2560 - 2575)
+                const defaultYears = Array.from({length: 16}, (_, i) => String(2575 - i));
+                
+                let dbYears = [];
+                if (data && data.length > 0) {
+                    dbYears = data.map(x => String(x.year).trim());
+                }
+
+                // รวมปีจาก Supabase และปีพื้นฐาน ตัดตัวซ้ำ แล้วเรียงจากมากไปน้อย
+                const allYears = [...new Set([...defaultYears, ...dbYears])].sort((a, b) => b - a);
+                const selectYear = document.getElementById('select-year');
+                const currentSelected = selectYear.value || '2568';
+
+                selectYear.innerHTML = '';
+                allYears.forEach(y => {
+                    const opt = document.createElement('option');
+                    opt.value = y;
+                    opt.innerText = y;
+                    if (y === currentSelected) opt.selected = true;
+                    selectYear.appendChild(opt);
+                });
+            } catch (err) {
+                console.error('Error fetching years:', err);
+            }
         }
 
         function changeFilter() {
@@ -1264,6 +1298,10 @@
             } else {
                 closeImportModal();
                 showToast(`นำเข้าข้อมูล ${parsedImportData.length} ข้อ สู่ Supabase เรียบร้อยแล้ว!`, 'success');
+                
+                // 👇 แทรกบรรทัดนี้ลงไปตรงนี้ครับ
+                await populateYearDropdown(); 
+                
                 await loadItemData();
             }
         }
