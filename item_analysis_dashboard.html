@@ -87,7 +87,7 @@
     <!-- Main Content -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow space-y-8">
         
-        <!-- Year & Exam Round Selection Bar -->
+        <!-- Year, Exam Round & Section Selection Bar -->
         <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div class="flex flex-wrap items-center gap-4 w-full md:w-auto">
                 <div>
@@ -112,6 +112,16 @@
                         <option value="comprehensive">ประมวลความรู้ (Comprehensive)</option>
                     </select>
                 </div>
+
+                <!-- 1. SECTION FILTER DROPDOWN -->
+                <div>
+                    <label class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">
+                        <i class="fa-solid fa-layer-group mr-1"></i>ส่วนข้อสอบ (Section)
+                    </label>
+                    <select id="select-section" onchange="applySectionFilter()" class="bg-indigo-50/60 border border-indigo-200 text-indigo-900 text-sm font-bold rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="all" selected>ภาพรวมทั้งหมด (ทุกตอน)</option>
+                    </select>
+                </div>
             </div>
 
             <div class="flex items-center gap-3">
@@ -129,7 +139,7 @@
             <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow">
                 <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">จำนวนข้อสอบทั้งหมด</div>
                 <div id="kpi-total-items" class="text-3xl font-bold text-slate-800 mt-2">0 ข้อ</div>
-                <div class="text-xs text-slate-500 mt-1">ข้อสอบฉบับสมบูรณ์</div>
+                <div class="text-xs text-slate-500 mt-1" id="kpi-section-tag">ภาพรวมทั้งฉบับ</div>
             </div>
 
             <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow">
@@ -154,6 +164,45 @@
                 <div class="text-xs font-semibold text-red-700 uppercase tracking-wider">MPL (Modified Cohen)</div>
                 <div id="kpi-cohen-mpl" class="text-3xl font-extrabold text-red-600 mt-2">0.00</div>
                 <div class="text-xs text-red-600 mt-1 font-semibold">คำนวณจาก 0.65 × P90</div>
+            </div>
+        </div>
+
+        <!-- 2. SUMMARY & SECTION BREAKDOWN TABLE CARD -->
+        <div class="bg-white rounded-2xl border border-slate-200 card-shadow overflow-hidden space-y-4">
+            <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-table-cells-large text-indigo-600"></i>
+                        ตารางสรุปภาพรวมและแยกส่วนข้อสอบ (Overall & Section Analysis Summary)
+                    </h3>
+                    <p class="text-xs text-slate-500">จำแนกสัดส่วน % ข้อสอบที่ควรเก็บเข้าคลังข้อสอบและข้อที่ต้องปรับปรุง แยกตามส่วน/ตอน</p>
+                </div>
+                <span class="px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-semibold rounded-xl border border-emerald-200">
+                    <i class="fa-solid fa-shield-halved mr-1"></i> เกณฑ์คลังข้อสอบ: p: 0.20–0.80, r ≥ 0.20
+                </span>
+            </div>
+
+            <div class="overflow-x-auto px-6 pb-6">
+                <table class="w-full text-left border-collapse rounded-xl overflow-hidden" id="summary-section-table">
+                    <thead>
+                        <tr class="bg-slate-100 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                            <th class="py-3 px-4">ส่วน / ตอนข้อสอบ</th>
+                            <th class="py-3 px-4 text-center">จำนวนข้อสอบ</th>
+                            <th class="py-3 px-4 text-center">เฉลี่ย p</th>
+                            <th class="py-3 px-4 text-center">เฉลี่ย r</th>
+                            <th class="py-3 px-4 text-center bg-emerald-50/80 text-emerald-800 border-l border-slate-200">
+                                <i class="fa-solid fa-box-archive mr-1"></i>ควรเก็บเข้าคลังข้อสอบ
+                            </th>
+                            <th class="py-3 px-4 text-center bg-red-50/80 text-red-800 border-l border-slate-200">
+                                <i class="fa-solid fa-triangle-exclamation mr-1"></i>ต้องปรับปรุง
+                            </th>
+                            <th class="py-3 px-4 text-left border-l border-slate-200">ข้อสอบที่ต้องปรับปรุง (Item No.)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs font-medium text-slate-700" id="summary-section-body">
+                        <!-- Rendered dynamically -->
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -190,7 +239,7 @@
                         <i class="fa-solid fa-list-check text-indigo-600"></i>
                         ตารางสรุปคุณภาพและตัวเลือกข้อสอบรายข้อ (Item Quality Matrix)
                     </h3>
-                    <p class="text-xs text-slate-500">แสดงค่า p, r, การกระจายตัวเลือก A-D และสถานะการประเมินคุณภาพข้อสอบ</p>
+                    <p class="text-xs text-slate-500">แสดงค่า p, r, การกระจายตัวเลือก A-D และสถานะการประเมินคุณภาพข้อสอบรายข้อ</p>
                 </div>
                 
                 <div class="flex items-center gap-3 w-full sm:w-auto">
@@ -212,13 +261,14 @@
                     <thead>
                         <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                             <th class="py-3.5 px-6">ข้อที่</th>
+                            <th class="py-3.5 px-4 text-center">ส่วน / ตอน</th>
                             <th class="py-3.5 px-6 text-center">ความยากง่าย (p)</th>
                             <th class="py-3.5 px-6 text-center">อำนาจจำแนก (r)</th>
-                            <th class="py-3.5 px-6 text-center">ตัวเลือก A (%)</th>
-                            <th class="py-3.5 px-6 text-center">ตัวเลือก B (%)</th>
-                            <th class="py-3.5 px-6 text-center">ตัวเลือก C (%)</th>
-                            <th class="py-3.5 px-6 text-center">ตัวเลือก D (%)</th>
-                            <th class="py-3.5 px-6 text-center">Angoff MPL (%)</th>
+                            <th class="py-3.5 px-4 text-center">ตัวเลือก A (%)</th>
+                            <th class="py-3.5 px-4 text-center">ตัวเลือก B (%)</th>
+                            <th class="py-3.5 px-4 text-center">ตัวเลือก C (%)</th>
+                            <th class="py-3.5 px-4 text-center">ตัวเลือก D (%)</th>
+                            <th class="py-3.5 px-4 text-center">Angoff MPL (%)</th>
                             <th class="py-3.5 px-6 text-center">ประเมินคุณภาพ</th>
                             <th class="py-3.5 px-6 text-center">จัดการ</th>
                         </tr>
@@ -256,11 +306,11 @@
             <div class="space-y-4">
                 <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-xs text-indigo-800 space-y-1.5">
                     <div class="font-bold flex items-center gap-1.5 text-indigo-900">
-                        <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i> รองรับไฟล์ 2 รูปแบบอัตโนมัติ:
+                        <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i> รองรับการตรวจจับส่วนข้อสอบ (Sections) อัตโนมัติ:
                     </div>
                     <ul class="list-disc pl-4 space-y-1 text-slate-700">
-                        <li><strong>ไฟล์คะแนนดิบรายข้อของนิสิต</strong> (มีคอลัมน์ ข้อ 1..ข้อ N, มีแถวเฉลย) &rarr; <span class="text-emerald-700 font-semibold">ระบบจะคำนวณค่า p, r และ %ตัวเลือกให้ครบถ้วนทุกข้ออัตโนมัติ!</span></li>
-                        <li><strong>ไฟล์สรุปผลการวิเคราะห์ข้อสอบ</strong> (มีคอลัมน์ Item, p, r, OptionA-D)</li>
+                        <li><strong>ตรวจจับ SCORE1, SCORE2, SCORE3...</strong> และแยกข้อเข้าสู่ตอนที่ 1, 2, 3 ให้อัตโนมัติ</li>
+                        <li><strong>ไฟล์คะแนนดิบนิสิต</strong> (มีคอลัมน์ ข้อ 1..ข้อ N, มีแถวเฉลย) &rarr; <span class="text-emerald-700 font-semibold">ระบบคำนวณ p, r และ %ตัวเลือกให้ครบถ้วนทุกข้ออัตโนมัติ!</span></li>
                     </ul>
                 </div>
 
@@ -288,6 +338,7 @@
                             <thead class="bg-slate-100 sticky top-0">
                                 <tr>
                                     <th class="p-2">ข้อที่</th>
+                                    <th class="p-2">ส่วน/ตอน</th>
                                     <th class="p-2 text-center">ความยาก (p)</th>
                                     <th class="p-2 text-center">อำนาจจำแนก (r)</th>
                                     <th class="p-2 text-center">A (%)</th>
@@ -330,11 +381,18 @@
             <form id="item-form" onsubmit="handleSaveItem(event)" class="space-y-4">
                 <input type="hidden" id="edit-id">
 
-                <div class="grid grid-cols-3 gap-3">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">ข้อที่ <span class="text-red-500">*</span></label>
                         <input type="number" id="input-item-no" required min="1" max="300" placeholder="1" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">ส่วน/ตอนข้อสอบ</label>
+                        <input type="text" id="input-section" placeholder="ตอนที่ 1" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-semibold text-slate-600 mb-1">ความยากง่าย (p) <span class="text-red-500">*</span></label>
                         <input type="number" id="input-p" required step="0.01" min="0" max="1" placeholder="0.65" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
@@ -413,7 +471,8 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // Global State
-        let itemsData = [];
+        let allYearItems = [];    // Raw loaded from DB for selected year/round
+        let filteredItems = [];   // Items filtered by section dropdown
         let parsedImportData = [];
         let scatterChart = null;
         let itemToDeleteId = null;
@@ -439,20 +498,59 @@
                     .order('item_no', { ascending: true });
 
                 if (!error && data && data.length > 0) {
-                    itemsData = data;
+                    allYearItems = data.map(x => ({
+                        ...x,
+                        section: x.section || 'ตอนที่ 1'
+                    }));
                 } else {
-                    itemsData = [];
+                    allYearItems = [];
                 }
             } catch (err) {
                 console.error('Supabase load error:', err);
-                itemsData = [];
+                allYearItems = [];
             }
 
-            renderDashboard();
+            populateSectionDropdown();
+            applySectionFilter();
         }
 
         function changeFilter() {
             loadItemData();
+        }
+
+        // Populate Section Dropdown dynamically
+        function populateSectionDropdown() {
+            const selectSec = document.getElementById('select-section');
+            const currentVal = selectSec.value;
+            selectSec.innerHTML = '<option value="all">ภาพรวมทั้งหมด (ทุกตอน)</option>';
+
+            const sections = [...new Set(allYearItems.map(x => x.section || 'ตอนที่ 1'))].filter(Boolean);
+            sections.sort().forEach(sec => {
+                const countSec = allYearItems.filter(x => (x.section || 'ตอนที่ 1') === sec).length;
+                const opt = document.createElement('option');
+                opt.value = sec;
+                opt.innerText = `${sec} (${countSec} ข้อ)`;
+                selectSec.appendChild(opt);
+            });
+
+            if (sections.includes(currentVal)) {
+                selectSec.value = currentVal;
+            } else {
+                selectSec.value = 'all';
+            }
+        }
+
+        function applySectionFilter() {
+            const selectedSec = document.getElementById('select-section').value;
+            if (selectedSec === 'all') {
+                filteredItems = [...allYearItems];
+                document.getElementById('kpi-section-tag').innerText = 'ภาพรวมทั้งฉบับ';
+            } else {
+                filteredItems = allYearItems.filter(x => (x.section || 'ตอนที่ 1') === selectedSec);
+                document.getElementById('kpi-section-tag').innerText = selectedSec;
+            }
+
+            renderDashboard();
         }
 
         function evaluateItemStatus(p, r) {
@@ -462,15 +560,20 @@
             return 'คุณภาพดีเยี่ยม';
         }
 
+        function isItemBankEligible(p, r) {
+            return parseFloat(r) >= 0.20 && parseFloat(p) >= 0.20 && parseFloat(p) <= 0.80;
+        }
+
         function renderDashboard() {
             updateKPIs();
+            renderSummarySectionTable();
             renderScatterChart();
             renderItemTable();
         }
 
         // Update Summary Cards
         function updateKPIs() {
-            const count = itemsData.length;
+            const count = filteredItems.length;
             document.getElementById('kpi-total-items').innerText = `${count} ข้อ`;
 
             if (count === 0) {
@@ -481,19 +584,19 @@
                 return;
             }
 
-            const sumP = itemsData.reduce((acc, x) => acc + parseFloat(x.p_value), 0);
-            const sumR = itemsData.reduce((acc, x) => acc + parseFloat(x.r_value), 0);
+            const sumP = filteredItems.reduce((acc, x) => acc + parseFloat(x.p_value), 0);
+            const sumR = filteredItems.reduce((acc, x) => acc + parseFloat(x.r_value), 0);
             const meanP = sumP / count;
             const meanR = sumR / count;
 
             // Approximate KR-20 formula simulation
-            const sumPQ = itemsData.reduce((acc, x) => acc + (x.p_value * (1 - x.p_value)), 0);
+            const sumPQ = filteredItems.reduce((acc, x) => acc + (x.p_value * (1 - x.p_value)), 0);
             const varTotal = count * 0.18; 
-            const kr20 = (count / (count - 1)) * (1 - (sumPQ / varTotal));
+            const kr20 = count > 1 ? (count / (count - 1)) * (1 - (sumPQ / varTotal)) : 0.80;
             const clampedKR20 = Math.min(0.98, Math.max(0.40, kr20)).toFixed(2);
 
             // Estimated P90 for Modified Cohen
-            const sortedP = [...itemsData].map(x => x.p_value * 100).sort((a, b) => a - b);
+            const sortedP = [...filteredItems].map(x => x.p_value * 100).sort((a, b) => a - b);
             const p90Idx = Math.floor(0.90 * count);
             const p90Val = sortedP[p90Idx] || 80.0;
             const cohenMPL = (0.65 * p90Val).toFixed(2);
@@ -504,30 +607,100 @@
             document.getElementById('kpi-cohen-mpl').innerText = cohenMPL;
         }
 
+        // RENDER OVERALL & SECTION COMPARISON TABLE
+        function renderSummarySectionTable() {
+            const tbody = document.getElementById('summary-section-body');
+            tbody.innerHTML = '';
+
+            if (allYearItems.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400">ยังไม่มีข้อมูลข้อสอบสำหรับการสรุปแยกส่วน</td></tr>`;
+                return;
+            }
+
+            // Sections list
+            const sections = [...new Set(allYearItems.map(x => x.section || 'ตอนที่ 1'))].sort();
+            const sectionGroups = [
+                { name: 'ภาพรวมทั้งหมด (ทุกตอน)', items: allYearItems, isOverall: true },
+                ...sections.map(sec => ({
+                    name: sec,
+                    items: allYearItems.filter(x => (x.section || 'ตอนที่ 1') === sec),
+                    isOverall: false
+                }))
+            ];
+
+            sectionGroups.forEach(group => {
+                const total = group.items.length;
+                if (total === 0) return;
+
+                const meanP = (group.items.reduce((a, x) => a + parseFloat(x.p_value), 0) / total).toFixed(2);
+                const meanR = (group.items.reduce((a, x) => a + parseFloat(x.r_value), 0) / total).toFixed(2);
+
+                const bankEligibleItems = group.items.filter(x => isItemBankEligible(x.p_value, x.r_value));
+                const bankCount = bankEligibleItems.length;
+                const bankPct = ((bankCount / total) * 100).toFixed(1);
+
+                const reviseItems = group.items.filter(x => !isItemBankEligible(x.p_value, x.r_value));
+                const reviseCount = reviseItems.length;
+                const revisePct = ((reviseCount / total) * 100).toFixed(1);
+
+                const reviseListStr = reviseItems.map(x => `ข้อ ${x.item_no}`).join(', ') || '-';
+
+                const tr = document.createElement('tr');
+                tr.className = group.isOverall ? 'bg-indigo-50/70 font-bold border-b-2 border-indigo-200' : 'hover:bg-slate-50 transition border-b border-slate-100';
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 ${group.isOverall ? 'text-indigo-900 font-bold' : 'text-slate-800 font-semibold'}">
+                        ${group.isOverall ? '<i class="fa-solid fa-chart-pie text-indigo-600 mr-1.5"></i>' : '<i class="fa-solid fa-folder text-slate-400 mr-1.5"></i>'}
+                        ${group.name}
+                    </td>
+                    <td class="py-3 px-4 text-center font-semibold text-slate-700">${total} ข้อ (${((total / allYearItems.length) * 100).toFixed(0)}%)</td>
+                    <td class="py-3 px-4 text-center text-blue-700 font-bold">${meanP}</td>
+                    <td class="py-3 px-4 text-center text-purple-700 font-bold">${meanR}</td>
+                    
+                    <td class="py-3 px-4 text-center bg-emerald-50/40 border-l border-slate-200">
+                        <span class="inline-flex items-center gap-1 font-bold text-emerald-700">
+                            ${bankCount} ข้อ <span class="text-[11px] font-medium text-emerald-600">(${bankPct}%)</span>
+                        </span>
+                    </td>
+                    
+                    <td class="py-3 px-4 text-center bg-red-50/40 border-l border-slate-200">
+                        <span class="inline-flex items-center gap-1 font-bold text-red-700">
+                            ${reviseCount} ข้อ <span class="text-[11px] font-medium text-red-600">(${revisePct}%)</span>
+                        </span>
+                    </td>
+
+                    <td class="py-3 px-4 text-left border-l border-slate-200 text-xs text-slate-600 max-w-xs truncate" title="${reviseListStr}">
+                        ${reviseListStr}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
         // Render Scatter Plot Chart.js
         function renderScatterChart() {
             const ctx = document.getElementById('itemScatterChart').getContext('2d');
             if (scatterChart) scatterChart.destroy();
 
-            const goodItems = itemsData.filter(x => x.r_value >= 0.20 && x.p_value >= 0.20 && x.p_value <= 0.80)
-                                       .map(x => ({ x: x.p_value, y: x.r_value, item_no: x.item_no }));
+            const goodItems = filteredItems.filter(x => isItemBankEligible(x.p_value, x.r_value))
+                                           .map(x => ({ x: x.p_value, y: x.r_value, item_no: x.item_no, section: x.section }));
             
-            const lowDiscItems = itemsData.filter(x => x.r_value < 0.20)
-                                          .map(x => ({ x: x.p_value, y: x.r_value, item_no: x.item_no }));
+            const lowDiscItems = filteredItems.filter(x => !isItemBankEligible(x.p_value, x.r_value))
+                                              .map(x => ({ x: x.p_value, y: x.r_value, item_no: x.item_no, section: x.section }));
 
             scatterChart = new Chart(ctx, {
                 type: 'scatter',
                 data: {
                     datasets: [
                         {
-                            label: 'ข้อสอบคุณภาพดีเยี่ยม',
+                            label: 'ข้อสอบดีเยี่ยม (เก็บเข้าคลังข้อสอบ)',
                             data: goodItems,
                             backgroundColor: '#10b981',
                             pointRadius: 6,
                             pointHoverRadius: 8
                         },
                         {
-                            label: 'ข้อสอบควรปรับปรุง (r < 0.20)',
+                            label: 'ข้อสอบควรปรับปรุง (r < 0.20 หรือ p สุดโต่ง)',
                             data: lowDiscItems,
                             backgroundColor: '#ef4444',
                             pointRadius: 6,
@@ -544,7 +717,7 @@
                             callbacks: {
                                 label: context => {
                                     const pt = context.raw;
-                                    return `ข้อที่ ${pt.item_no}: ความยาก (p) = ${pt.x}, อำนาจจำแนก (r) = ${pt.y}`;
+                                    return `ข้อที่ ${pt.item_no} [${pt.section || 'ตอนที่ 1'}]: ความยาก (p) = ${pt.x}, อำนาจจำแนก (r) = ${pt.y}`;
                                 }
                             }
                         }
@@ -572,28 +745,30 @@
             const tbody = document.getElementById('item-table-body');
             tbody.innerHTML = '';
 
-            if (itemsData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-10 text-slate-400 text-sm">ยังไม่มีข้อมูลข้อสอบในรอบนี้ กดปุ่ม <strong>"นำเข้าไฟล์ CSV / Excel"</strong> ด้านบนเพื่อเพิ่มข้อมูล</td></tr>`;
+            if (filteredItems.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="11" class="text-center py-10 text-slate-400 text-sm">ยังไม่มีข้อมูลข้อสอบในส่วนนี้ กดปุ่ม <strong>"นำเข้าไฟล์ CSV / Excel"</strong> ด้านบนเพื่อเพิ่มข้อมูล</td></tr>`;
                 return;
             }
 
-            itemsData.forEach(item => {
+            filteredItems.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
                 
                 let badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                if (item.r_value < 0.20) badgeClass = 'bg-red-50 text-red-700 border-red-200';
-                else if (item.p_value < 0.20 || item.p_value > 0.80) badgeClass = 'bg-amber-50 text-amber-700 border-amber-200';
+                if (!isItemBankEligible(item.p_value, item.r_value)) {
+                    badgeClass = item.r_value < 0.20 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-amber-50 text-amber-700 border-amber-200';
+                }
 
                 tr.innerHTML = `
                     <td class="py-3.5 px-6 font-bold text-slate-800">ข้อที่ ${item.item_no}</td>
+                    <td class="py-3.5 px-4 text-center text-xs font-semibold text-slate-500">${item.section || 'ตอนที่ 1'}</td>
                     <td class="py-3.5 px-6 text-center font-semibold text-blue-700">${parseFloat(item.p_value).toFixed(2)}</td>
                     <td class="py-3.5 px-6 text-center font-semibold text-purple-700">${parseFloat(item.r_value).toFixed(2)}</td>
-                    <td class="py-3.5 px-6 text-center text-xs text-slate-600">${item.distractor_a || 0}%</td>
-                    <td class="py-3.5 px-6 text-center text-xs text-slate-600">${item.distractor_b || 0}%</td>
-                    <td class="py-3.5 px-6 text-center text-xs text-slate-600">${item.distractor_c || 0}%</td>
-                    <td class="py-3.5 px-6 text-center text-xs text-slate-600">${item.distractor_d || 0}%</td>
-                    <td class="py-3.5 px-6 text-center text-xs font-mono text-slate-500">${item.modified_angoff_mpl || 60}%</td>
+                    <td class="py-3.5 px-4 text-center text-xs text-slate-600">${item.distractor_a || 0}%</td>
+                    <td class="py-3.5 px-4 text-center text-xs text-slate-600">${item.distractor_b || 0}%</td>
+                    <td class="py-3.5 px-4 text-center text-xs text-slate-600">${item.distractor_c || 0}%</td>
+                    <td class="py-3.5 px-4 text-center text-xs text-slate-600">${item.distractor_d || 0}%</td>
+                    <td class="py-3.5 px-4 text-center text-xs font-mono text-slate-500">${item.modified_angoff_mpl || 60}%</td>
                     <td class="py-3.5 px-6 text-center">
                         <span class="px-2.5 py-1 text-xs font-semibold rounded-lg border ${badgeClass}">
                             ${evaluateItemStatus(item.p_value, item.r_value)}
@@ -621,7 +796,7 @@
             });
         }
 
-        // --- SMART FILE IMPORT LOGIC (BOTH RAW MATRIX & ITEM SUMMARY) ---
+        // --- SMART FILE IMPORT LOGIC WITH AUTO SECTION DETECTION ---
         function openImportModal() {
             document.getElementById('importModal').classList.remove('hidden');
             document.getElementById('file-input').value = '';
@@ -645,7 +820,6 @@
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
                 
-                // Parse 2D raw array and standard object json
                 const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
                 const jsonObjects = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
@@ -658,18 +832,15 @@
             const year = document.getElementById('select-year').value;
             const round = document.getElementById('select-round').value;
 
-            // 1. Check if format is Pre-analyzed Item Summary (has 'p' and 'r' columns)
             const isSummaryFormat = jsonObjects.length > 0 && jsonObjects.some(row => {
                 const keys = Object.keys(row).map(k => k.toLowerCase().trim());
                 return keys.includes('p') || keys.includes('difficulty') || keys.includes('ความยากง่าย');
             });
 
-            let studentCount = 0;
-
             if (isSummaryFormat) {
-                // Pre-calculated summary format
                 parsedImportData = jsonObjects.map((row, index) => {
                     let itemNo = row['Item'] || row['item'] || row['ข้อที่'] || (index + 1);
+                    let sec = row['Section'] || row['section'] || row['ส่วน'] || row['ตอนที่'] || 'ตอนที่ 1';
                     let p = parseFloat(row['p'] || row['P'] || row['Difficulty'] || row['ความยากง่าย'] || 0.5);
                     let r = parseFloat(row['r'] || row['R'] || row['Discrimination'] || row['อำนาจจำแนก'] || 0.3);
                     let a = parseFloat(row['OptionA'] || row['DistractorA'] || row['A'] || 10);
@@ -682,6 +853,7 @@
                         year: year,
                         exam_round: round,
                         item_no: parseInt(itemNo),
+                        section: String(sec).trim(),
                         p_value: p,
                         r_value: r,
                         distractor_a: a,
@@ -696,7 +868,6 @@
                 document.getElementById('import-type-badge').className = 'px-2 py-0.5 bg-blue-600 text-white font-bold rounded-md mr-1';
                 document.getElementById('import-student-count').innerText = 'สรุปสำเร็จ';
             } else {
-                // Raw Score / Student Response Matrix (like คะแนน-180432-M2-68.xlsx)
                 parsedImportData = processRawMatrix(rawRows, year, round);
             }
 
@@ -711,6 +882,7 @@
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td class="p-2 font-bold">ข้อ ${row.item_no}</td>
+                        <td class="p-2 text-slate-500">${row.section}</td>
                         <td class="p-2 text-center text-blue-600">${row.p_value}</td>
                         <td class="p-2 text-center text-purple-600">${row.r_value}</td>
                         <td class="p-2 text-center">${row.distractor_a}%</td>
@@ -726,176 +898,210 @@
             }
         }
 
-			// Auto-calculate p, r, distractor % from Raw Score Matrix
-	function processRawMatrix(rawRows, year, round) {
-		// 1. Find header row (row containing item names like 'ข้อ 1', 'ข้อ 2'...)
-		let headerRowIndex = -1;
-		let itemCols = [];
+        // Auto-calculate p, r, distractor % and DETECT SECTIONS from Raw Score Matrix
+        function processRawMatrix(rawRows, year, round) {
+            // 1. Find header row & item columns
+            let headerRowIndex = -1;
+            let itemCols = [];
 
-		for (let r = 0; r < Math.min(10, rawRows.length); r++) {
-			const row = rawRows[r];
-			let foundItems = [];
-			row.forEach((cell, colIdx) => {
-				const cellStr = String(cell).trim();
-				const match = cellStr.match(/^(?:ข้อ|item|q)\s*(\d+)/i);
-				if (match) {
-					foundItems.push({ colIndex: colIdx, itemNo: parseInt(match[1]) });
-				}
-			});
-			if (foundItems.length >= 5) {
-				headerRowIndex = r;
-				itemCols = foundItems;
-				break;
-			}
-		}
+            for (let r = 0; r < Math.min(10, rawRows.length); r++) {
+                const row = rawRows[r];
+                let foundItems = [];
+                row.forEach((cell, colIdx) => {
+                    const cellStr = String(cell).trim();
+                    const match = cellStr.match(/^(?:ข้อ|item|q)\s*(\d+)/i);
+                    if (match) {
+                        foundItems.push({ colIndex: colIdx, itemNo: parseInt(match[1]) });
+                    }
+                });
+                if (foundItems.length >= 5) {
+                    headerRowIndex = r;
+                    itemCols = foundItems;
+                    break;
+                }
+            }
 
-		if (headerRowIndex === -1 || itemCols.length === 0) {
-			alert('ไม่พบคอลัมน์ข้อสอบ (เช่น ข้อ 1, ข้อ 2...) ในไฟล์ กรุณาตรวจสอบรูปแบบไฟล์ Excel');
-			return [];
-		}
+            if (headerRowIndex === -1 || itemCols.length === 0) {
+                alert('ไม่พบคอลัมน์ข้อสอบ (เช่น ข้อ 1, ข้อ 2...) ในไฟล์ กรุณาตรวจสอบรูปแบบไฟล์ Excel');
+                return [];
+            }
 
-		// 2. Find Answer Key Row (look for 'เฉลย' or 'key' in row, or default to headerRowIndex + 1)
-		let keyRowIndex = -1;
-		for (let r = headerRowIndex + 1; r < Math.min(headerRowIndex + 5, rawRows.length); r++) {
-			const rowStr = rawRows[r].map(c => String(c).toLowerCase()).join(' ');
-			if (rowStr.includes('เฉลย') || rowStr.includes('key') || rowStr.includes('answer')) {
-				keyRowIndex = r;
-				break;
-			}
-		}
-		if (keyRowIndex === -1) keyRowIndex = headerRowIndex + 1;
-		let keyRow = rawRows[keyRowIndex];
+            // 2. DETECT SECTIONS / PARTS (Dynamic for 2, 3, 4, 5+ sections)
+            let sectionRanges = [];
+            const headerRow = rawRows[headerRowIndex];
+            const keyOrScoreRow = rawRows[headerRowIndex + 1] || [];
+            
+            // Limit section scan to columns BEFORE the first item column (e.g. before 'ข้อ 1')
+            const firstItemColIdx = itemCols.length > 0 ? itemCols[0].colIndex : headerRow.length;
 
-		// Summary keywords to filter out non-student rows
-		const summaryKeywords = [
-			'max', 'min', 'ave', 'mean', 'sd', 's.d.', 'std', 'median', 'mode', 
-			'kr-20', 'kr20', 'total', 'sum', 'p90', 'p50', 'key', 'ans', 'answer',
-			'เฉลี่ย', 'สูงสุด', 'ต่ำสุด', 'ส่วนเบี่ยงเบน', 'มัธยฐาน', 'ฐานนิยม', 
-			'เฉลย', 'คะแนนเต็ม', 'เต็ม', 'รวม', 'ความยาก', 'อำนาจจำแนก'
-		];
+            for (let colIdx = 0; colIdx < firstItemColIdx; colIdx++) {
+                const cellStr = String(headerRow[colIdx] || '').trim().toUpperCase();
+                if (cellStr.startsWith('SCORE') || cellStr.startsWith('PART') || cellStr.startsWith('ตอน')) {
+                    const maxScoreVal = parseFloat(keyOrScoreRow[colIdx]);
+                    if (!isNaN(maxScoreVal) && maxScoreVal > 0) {
+                        sectionRanges.push({
+                            name: `ตอนที่ ${sectionRanges.length + 1} (${cellStr}: ${maxScoreVal} ข้อ)`,
+                            colIndex: colIdx,
+                            maxItems: maxScoreVal
+                        });
+                    }
+                }
+            }
 
-		// 3. Filter Student Rows (Check Student ID & ignore summary rows)
-		let studentRows = [];
-		for (let r = headerRowIndex + 1; r < rawRows.length; r++) {
-			if (r === keyRowIndex) continue;
+            // Map item number to section
+            function getItemSection(itemNo) {
+                if (sectionRanges.length === 0) return 'ตอนที่ 1';
+                
+                let cumulative = 0;
+                for (let sec of sectionRanges) {
+                    cumulative += sec.maxItems;
+                    if (itemNo <= cumulative) {
+                        return sec.name;
+                    }
+                }
+                return sectionRanges[sectionRanges.length - 1].name;
+            }
 
-			const row = rawRows[r];
-			const rowCombinedStr = row.map(c => String(c || '').toLowerCase()).join(' ');
+            // 3. Find Answer Key Row
+            let keyRowIndex = -1;
+            for (let r = headerRowIndex + 1; r < Math.min(headerRowIndex + 5, rawRows.length); r++) {
+                const rowStr = rawRows[r].map(c => String(c).toLowerCase()).join(' ');
+                if (rowStr.includes('เฉลย') || rowStr.includes('key') || rowStr.includes('answer')) {
+                    keyRowIndex = r;
+                    break;
+                }
+            }
+            if (keyRowIndex === -1) keyRowIndex = headerRowIndex + 1;
+            let keyRow = rawRows[keyRowIndex];
 
-			// Skip if any summary keyword exists in row
-			const isSummaryRow = summaryKeywords.some(kw => rowCombinedStr.includes(kw));
-			if (isSummaryRow) continue;
+            // Summary keywords to filter out non-student rows
+            const summaryKeywords = [
+                'max', 'min', 'ave', 'mean', 'sd', 's.d.', 'std', 'median', 'mode', 
+                'kr-20', 'kr20', 'total', 'sum', 'p90', 'p50', 'key', 'ans', 'answer',
+                'เฉลี่ย', 'สูงสุด', 'ต่ำสุด', 'ส่วนเบี่ยงเบน', 'มัธยฐาน', 'ฐานนิยม', 
+                'เฉลย', 'คะแนนเต็ม', 'เต็ม', 'รวม', 'ความยาก', 'อำนาจจำแนก'
+            ];
 
-			// Verify valid Student ID (numeric digit >= 6 digits in metadata columns)
-			let hasStudentId = false;
-			for (let c = 0; c < Math.min(6, row.length); c++) {
-				const cellVal = String(row[c] || '').split('.')[0].trim();
-				if (/^\d{6,10}$/.test(cellVal)) {
-					hasStudentId = true;
-					break;
-				}
-			}
+            // 4. Extract Student Rows
+            let studentRows = [];
+            for (let r = headerRowIndex + 1; r < rawRows.length; r++) {
+                if (r === keyRowIndex) continue;
 
-			// Fallback for numbered sequence rows
-			if (!hasStudentId) {
-				const col0Val = String(row[0] || '').split('.')[0].trim();
-				if (/^\d+$/.test(col0Val) && parseInt(col0Val) > 0 && parseInt(col0Val) < 500) {
-					const hasItemAnswers = itemCols.slice(0, 5).some(item => {
-						const val = parseFloat(row[item.colIndex]);
-						return !isNaN(val) && val > 0;
-					});
-					if (hasItemAnswers) hasStudentId = true;
-				}
-			}
+                const row = rawRows[r];
+                const rowCombinedStr = row.map(c => String(c || '').toLowerCase()).join(' ');
 
-			if (hasStudentId) {
-				studentRows.push(row);
-			}
-		}
+                const isSummaryRow = summaryKeywords.some(kw => rowCombinedStr.includes(kw));
+                if (isSummaryRow) continue;
 
-		const N = studentRows.length;
-		document.getElementById('import-student-count').innerText = `${N} คน`;
-		document.getElementById('import-type-badge').innerText = 'คำนวณจากคะแนนดิบนิสิต';
-		document.getElementById('import-type-badge').className = 'px-2 py-0.5 bg-emerald-600 text-white font-bold rounded-md mr-1';
+                let hasStudentId = false;
+                for (let c = 0; c < Math.min(6, row.length); c++) {
+                    const cellVal = String(row[c] || '').split('.')[0].trim();
+                    if (/^\d{6,10}$/.test(cellVal)) {
+                        hasStudentId = true;
+                        break;
+                    }
+                }
 
-		if (N === 0) {
-			alert('ไม่พบแถวข้อมูลคำตอบของนิสิตในไฟล์');
-			return [];
-		}
+                if (!hasStudentId) {
+                    const col0Val = String(row[0] || '').split('.')[0].trim();
+                    if (/^\d+$/.test(col0Val) && parseInt(col0Val) > 0 && parseInt(col0Val) < 500) {
+                        const hasItemAnswers = itemCols.slice(0, 5).some(item => {
+                            const val = parseFloat(row[item.colIndex]);
+                            return !isNaN(val) && val > 0;
+                        });
+                        if (hasItemAnswers) hasStudentId = true;
+                    }
+                }
 
-		// 4. Calculate total correct score per student & rank High/Low group (27%)
-		let studentScores = studentRows.map(row => {
-			let score = 0;
-			itemCols.forEach(item => {
-				const studentAns = parseFloat(row[item.colIndex]);
-				const keyAns = parseFloat(keyRow[item.colIndex]);
-				if (!isNaN(studentAns) && !isNaN(keyAns) && studentAns === keyAns) {
-					score += 1;
-				}
-			});
-			return { row: row, score: score };
-		});
+                if (hasStudentId) {
+                    studentRows.push(row);
+                }
+            }
 
-		studentScores.sort((a, b) => b.score - a.score);
+            const N = studentRows.length;
+            document.getElementById('import-student-count').innerText = `${N} คน`;
+            document.getElementById('import-type-badge').innerText = 'คำนวณจากคะแนนดิบนิสิต';
+            document.getElementById('import-type-badge').className = 'px-2 py-0.5 bg-emerald-600 text-white font-bold rounded-md mr-1';
 
-		const groupSize = Math.max(1, Math.ceil(N * 0.27));
-		const highGroup = studentScores.slice(0, groupSize).map(x => x.row);
-		const lowGroup = studentScores.slice(N - groupSize).map(x => x.row);
+            if (N === 0) {
+                alert('ไม่พบแถวข้อมูลคำตอบของนิสิตในไฟล์');
+                return [];
+            }
 
-		// 5. Compute Item Statistics (p, r, distractor %)
-		let calculatedItems = itemCols.map(item => {
-			const keyAns = parseFloat(keyRow[item.colIndex]);
-			let correctCount = 0;
-			let countA = 0, countB = 0, countC = 0, countD = 0;
+            // 5. Calculate total correct score per student & High/Low groups (27%)
+            let studentScores = studentRows.map(row => {
+                let score = 0;
+                itemCols.forEach(item => {
+                    const studentAns = parseFloat(row[item.colIndex]);
+                    const keyAns = parseFloat(keyRow[item.colIndex]);
+                    if (!isNaN(studentAns) && !isNaN(keyAns) && studentAns === keyAns) {
+                        score += 1;
+                    }
+                });
+                return { row: row, score: score };
+            });
 
-			studentRows.forEach(row => {
-				const ans = parseFloat(row[item.colIndex]);
-				if (!isNaN(ans)) {
-					if (ans === keyAns) correctCount++;
-					if (ans === 1) countA++;
-					else if (ans === 2) countB++;
-					else if (ans === 3) countC++;
-					else if (ans === 4) countD++;
-				}
-			});
+            studentScores.sort((a, b) => b.score - a.score);
 
-			let highCorrect = 0;
-			highGroup.forEach(row => {
-				if (parseFloat(row[item.colIndex]) === keyAns) highCorrect++;
-			});
+            const groupSize = Math.max(1, Math.ceil(N * 0.27));
+            const highGroup = studentScores.slice(0, groupSize).map(x => x.row);
+            const lowGroup = studentScores.slice(N - groupSize).map(x => x.row);
 
-			let lowCorrect = 0;
-			lowGroup.forEach(row => {
-				if (parseFloat(row[item.colIndex]) === keyAns) lowCorrect++;
-			});
+            // 6. Compute Item Statistics (p, r, distractor % and assigned Section)
+            let calculatedItems = itemCols.map(item => {
+                const keyAns = parseFloat(keyRow[item.colIndex]);
+                let correctCount = 0;
+                let countA = 0, countB = 0, countC = 0, countD = 0;
 
-			let p = parseFloat((correctCount / N).toFixed(2));
-			let r = parseFloat(((highCorrect - lowCorrect) / groupSize).toFixed(2));
-			r = Math.min(1.0, Math.max(-1.0, r));
+                studentRows.forEach(row => {
+                    const ans = parseFloat(row[item.colIndex]);
+                    if (!isNaN(ans)) {
+                        if (ans === keyAns) correctCount++;
+                        if (ans === 1) countA++;
+                        else if (ans === 2) countB++;
+                        else if (ans === 3) countC++;
+                        else if (ans === 4) countD++;
+                    }
+                });
 
-			let aPct = parseFloat(((countA / N) * 100).toFixed(1));
-			let bPct = parseFloat(((countB / N) * 100).toFixed(1));
-			let cPct = parseFloat(((countC / N) * 100).toFixed(1));
-			let dPct = parseFloat(((countD / N) * 100).toFixed(1));
+                let highCorrect = 0;
+                highGroup.forEach(row => {
+                    if (parseFloat(row[item.colIndex]) === keyAns) highCorrect++;
+                });
 
-			return {
-				year: year,
-				exam_round: round,
-				item_no: item.itemNo,
-				p_value: p,
-				r_value: r,
-				distractor_a: aPct,
-				distractor_b: bPct,
-				distractor_c: cPct,
-				distractor_d: dPct,
-				modified_angoff_mpl: 60.0,
-				status: evaluateItemStatus(p, r)
-			};
-		});
+                let lowCorrect = 0;
+                lowGroup.forEach(row => {
+                    if (parseFloat(row[item.colIndex]) === keyAns) lowCorrect++;
+                });
 
-		calculatedItems.sort((a, b) => a.item_no - b.item_no);
-		return calculatedItems;
-	}
+                let p = parseFloat((correctCount / N).toFixed(2));
+                let r = parseFloat(((highCorrect - lowCorrect) / groupSize).toFixed(2));
+                r = Math.min(1.0, Math.max(-1.0, r));
+
+                let aPct = parseFloat(((countA / N) * 100).toFixed(1));
+                let bPct = parseFloat(((countB / N) * 100).toFixed(1));
+                let cPct = parseFloat(((countC / N) * 100).toFixed(1));
+                let dPct = parseFloat(((countD / N) * 100).toFixed(1));
+
+                return {
+                    year: year,
+                    exam_round: round,
+                    item_no: item.itemNo,
+                    section: getItemSection(item.itemNo),
+                    p_value: p,
+                    r_value: r,
+                    distractor_a: aPct,
+                    distractor_b: bPct,
+                    distractor_c: cPct,
+                    distractor_d: dPct,
+                    modified_angoff_mpl: 60.0,
+                    status: evaluateItemStatus(p, r)
+                };
+            });
+
+            calculatedItems.sort((a, b) => a.item_no - b.item_no);
+            return calculatedItems;
+        }
 
         async function executeBatchImport() {
             if (parsedImportData.length === 0) return;
@@ -903,7 +1109,7 @@
             const year = document.getElementById('select-year').value;
             const round = document.getElementById('select-round').value;
 
-            // Delete old items for this year & round first to overwrite cleanly
+            // Delete old items for this year & round first
             await supabaseClient
                 .from('mpl_item_analysis')
                 .delete()
@@ -917,8 +1123,9 @@
 
             if (error) {
                 console.warn('Supabase batch insert warning:', error.message);
-                itemsData = parsedImportData;
-                renderDashboard();
+                allYearItems = parsedImportData;
+                populateSectionDropdown();
+                applySectionFilter();
                 closeImportModal();
                 showToast(`นำเข้าข้อมูล ${parsedImportData.length} ข้อ (Local) เรียบร้อย`, 'success');
             } else {
@@ -928,11 +1135,10 @@
             }
         }
 
-        // Sample Template Download Helper
         function downloadSampleTemplate() {
-            let csv = "data:text/csv;charset=utf-8,\uFEFFItem,p,r,OptionA,OptionB,OptionC,OptionD,Angoff\n";
+            let csv = "data:text/csv;charset=utf-8,\uFEFFItem,Section,p,r,OptionA,OptionB,OptionC,OptionD,Angoff\n";
             for (let i = 1; i <= 10; i++) {
-                csv += `${i},0.65,0.35,10,70,10,10,60\n`;
+                csv += `${i},ตอนที่ 1,0.65,0.35,10,70,10,10,60\n`;
             }
             const encodedUri = encodeURI(csv);
             const link = document.createElement("a");
@@ -949,17 +1155,19 @@
             document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-plus text-emerald-600"></i> เพิ่มข้อมูลข้อสอบรายข้อ';
             document.getElementById('item-form').reset();
             document.getElementById('edit-id').value = '';
-            document.getElementById('input-item-no').value = itemsData.length + 1;
+            document.getElementById('input-item-no').value = allYearItems.length + 1;
+            document.getElementById('input-section').value = 'ตอนที่ 1';
         }
 
         function openEditModal(id) {
-            const item = itemsData.find(x => x.id === id);
+            const item = allYearItems.find(x => x.id === id);
             if (!item) return;
 
             document.getElementById('itemModal').classList.remove('hidden');
             document.getElementById('modal-title').innerHTML = '<i class="fa-solid fa-pen-to-square text-indigo-600"></i> แก้ไขข้อมูลข้อสอบ';
             document.getElementById('edit-id').value = item.id;
             document.getElementById('input-item-no').value = item.item_no;
+            document.getElementById('input-section').value = item.section || 'ตอนที่ 1';
             document.getElementById('input-p').value = item.p_value;
             document.getElementById('input-r').value = item.r_value;
             document.getElementById('input-dist-a').value = item.distractor_a || 0;
@@ -983,6 +1191,7 @@
                 year: year,
                 exam_round: round,
                 item_no: parseInt(document.getElementById('input-item-no').value),
+                section: document.getElementById('input-section').value.trim() || 'ตอนที่ 1',
                 p_value: parseFloat(document.getElementById('input-p').value),
                 r_value: parseFloat(document.getElementById('input-r').value),
                 distractor_a: parseFloat(document.getElementById('input-dist-a').value || 0),
@@ -997,26 +1206,24 @@
             };
 
             if (editId) {
-                // Update
                 const { error } = await supabaseClient
                     .from('mpl_item_analysis')
                     .update(record)
                     .eq('id', editId);
                 
                 if (error) {
-                    const idx = itemsData.findIndex(x => x.id == editId);
-                    if (idx !== -1) itemsData[idx] = { id: editId, ...record };
+                    const idx = allYearItems.findIndex(x => x.id == editId);
+                    if (idx !== -1) allYearItems[idx] = { id: editId, ...record };
                 }
                 showToast('แก้ไขข้อมูลข้อสอบเรียบร้อย', 'success');
             } else {
-                // Insert
                 const { error } = await supabaseClient
                     .from('mpl_item_analysis')
                     .insert([record]);
                 
                 if (error) {
                     record.id = Date.now();
-                    itemsData.push(record);
+                    allYearItems.push(record);
                 }
                 showToast('เพิ่มข้อสอบใหม่เรียบร้อย', 'success');
             }
@@ -1046,8 +1253,9 @@
                 .eq('id', itemToDeleteId);
 
             if (error) {
-                itemsData = itemsData.filter(x => x.id !== itemToDeleteId);
-                renderDashboard();
+                allYearItems = allYearItems.filter(x => x.id !== itemToDeleteId);
+                populateSectionDropdown();
+                applySectionFilter();
             } else {
                 await loadItemData();
             }
