@@ -726,146 +726,176 @@
             }
         }
 
-        // Auto-calculate p, r, distractor % from Raw Score Matrix
-        function processRawMatrix(rawRows, year, round) {
-            // Find header row (row containing item names like 'ข้อ 1', 'ข้อ 2'...)
-            let headerRowIndex = -1;
-            let itemCols = []; // { colIndex: number, itemNo: number }
+			// Auto-calculate p, r, distractor % from Raw Score Matrix
+	function processRawMatrix(rawRows, year, round) {
+		// 1. Find header row (row containing item names like 'ข้อ 1', 'ข้อ 2'...)
+		let headerRowIndex = -1;
+		let itemCols = [];
 
-            for (let r = 0; r < Math.min(10, rawRows.length); r++) {
-                const row = rawRows[r];
-                let foundItems = [];
-                row.forEach((cell, colIdx) => {
-                    const cellStr = String(cell).trim();
-                    const match = cellStr.match(/^(?:ข้อ|item|q)\s*(\d+)/i);
-                    if (match) {
-                        foundItems.push({ colIndex: colIdx, itemNo: parseInt(match[1]) });
-                    }
-                });
-                if (foundItems.length >= 5) {
-                    headerRowIndex = r;
-                    itemCols = foundItems;
-                    break;
-                }
-            }
+		for (let r = 0; r < Math.min(10, rawRows.length); r++) {
+			const row = rawRows[r];
+			let foundItems = [];
+			row.forEach((cell, colIdx) => {
+				const cellStr = String(cell).trim();
+				const match = cellStr.match(/^(?:ข้อ|item|q)\s*(\d+)/i);
+				if (match) {
+					foundItems.push({ colIndex: colIdx, itemNo: parseInt(match[1]) });
+				}
+			});
+			if (foundItems.length >= 5) {
+				headerRowIndex = r;
+				itemCols = foundItems;
+				break;
+			}
+		}
 
-            if (headerRowIndex === -1 || itemCols.length === 0) {
-                alert('ไม่พบคอลัมน์ข้อสอบ (เช่น ข้อ 1, ข้อ 2...) ในไฟล์ กรุณาตรวจสอบรูปแบบไฟล์ Excel');
-                return [];
-            }
+		if (headerRowIndex === -1 || itemCols.length === 0) {
+			alert('ไม่พบคอลัมน์ข้อสอบ (เช่น ข้อ 1, ข้อ 2...) ในไฟล์ กรุณาตรวจสอบรูปแบบไฟล์ Excel');
+			return [];
+		}
 
-            // Find Answer Key Row (row after header or row containing key)
-            let keyRow = rawRows[headerRowIndex + 1];
-            
-            // Extract Student Rows (rows containing valid student ID or response data)
-            let studentRows = [];
-            for (let r = headerRowIndex + 2; r < rawRows.length; r++) {
-                const row = rawRows[r];
-                const firstColStr = String(row[0] || '').trim().toLowerCase();
-                const studentIdStr = String(row[1] || '').trim();
+		// 2. Find Answer Key Row (look for 'เฉลย' or 'key' in row, or default to headerRowIndex + 1)
+		let keyRowIndex = -1;
+		for (let r = headerRowIndex + 1; r < Math.min(headerRowIndex + 5, rawRows.length); r++) {
+			const rowStr = rawRows[r].map(c => String(c).toLowerCase()).join(' ');
+			if (rowStr.includes('เฉลย') || rowStr.includes('key') || rowStr.includes('answer')) {
+				keyRowIndex = r;
+				break;
+			}
+		}
+		if (keyRowIndex === -1) keyRowIndex = headerRowIndex + 1;
+		let keyRow = rawRows[keyRowIndex];
 
-                // Skip summary rows (Max, Min, AVE)
-                if (firstColStr.includes('max') || firstColStr.includes('min') || firstColStr.includes('ave') || firstColStr.includes('เฉลี่ย')) continue;
-                if (String(row[2] || '').toLowerCase().includes('max') || String(row[2] || '').toLowerCase().includes('ave')) continue;
+		// Summary keywords to filter out non-student rows
+		const summaryKeywords = [
+			'max', 'min', 'ave', 'mean', 'sd', 's.d.', 'std', 'median', 'mode', 
+			'kr-20', 'kr20', 'total', 'sum', 'p90', 'p50', 'key', 'ans', 'answer',
+			'เฉลี่ย', 'สูงสุด', 'ต่ำสุด', 'ส่วนเบี่ยงเบน', 'มัธยฐาน', 'ฐานนิยม', 
+			'เฉลย', 'คะแนนเต็ม', 'เต็ม', 'รวม', 'ความยาก', 'อำนาจจำแนก'
+		];
 
-                // Check if row has numeric values in item columns
-                let hasItemData = itemCols.some(item => {
-                    const val = parseFloat(row[item.colIndex]);
-                    return !isNaN(val) && val > 0;
-                });
+		// 3. Filter Student Rows (Check Student ID & ignore summary rows)
+		let studentRows = [];
+		for (let r = headerRowIndex + 1; r < rawRows.length; r++) {
+			if (r === keyRowIndex) continue;
 
-                if (hasItemData) {
-                    studentRows.push(row);
-                }
-            }
+			const row = rawRows[r];
+			const rowCombinedStr = row.map(c => String(c || '').toLowerCase()).join(' ');
 
-            const N = studentRows.length;
-            document.getElementById('import-student-count').innerText = `${N} คน`;
-            document.getElementById('import-type-badge').innerText = 'คำนวณจากคะแนนดิบนิสิต';
-            document.getElementById('import-type-badge').className = 'px-2 py-0.5 bg-emerald-600 text-white font-bold rounded-md mr-1';
+			// Skip if any summary keyword exists in row
+			const isSummaryRow = summaryKeywords.some(kw => rowCombinedStr.includes(kw));
+			if (isSummaryRow) continue;
 
-            if (N === 0) {
-                alert('ไม่พบแถวข้อมูลคำตอบของนิสิตในไฟล์');
-                return [];
-            }
+			// Verify valid Student ID (numeric digit >= 6 digits in metadata columns)
+			let hasStudentId = false;
+			for (let c = 0; c < Math.min(6, row.length); c++) {
+				const cellVal = String(row[c] || '').split('.')[0].trim();
+				if (/^\d{6,10}$/.test(cellVal)) {
+					hasStudentId = true;
+					break;
+				}
+			}
 
-            // Calculate total correct score for each student to rank High/Low groups
-            let studentScores = studentRows.map(row => {
-                let score = 0;
-                itemCols.forEach(item => {
-                    const studentAns = parseFloat(row[item.colIndex]);
-                    const keyAns = parseFloat(keyRow[item.colIndex]);
-                    if (!isNaN(studentAns) && !isNaN(keyAns) && studentAns === keyAns) {
-                        score += 1;
-                    }
-                });
-                return { row: row, score: score };
-            });
+			// Fallback for numbered sequence rows
+			if (!hasStudentId) {
+				const col0Val = String(row[0] || '').split('.')[0].trim();
+				if (/^\d+$/.test(col0Val) && parseInt(col0Val) > 0 && parseInt(col0Val) < 500) {
+					const hasItemAnswers = itemCols.slice(0, 5).some(item => {
+						const val = parseFloat(row[item.colIndex]);
+						return !isNaN(val) && val > 0;
+					});
+					if (hasItemAnswers) hasStudentId = true;
+				}
+			}
 
-            // Sort students descending by score
-            studentScores.sort((a, b) => b.score - a.score);
+			if (hasStudentId) {
+				studentRows.push(row);
+			}
+		}
 
-            const groupSize = Math.max(1, Math.ceil(N * 0.27));
-            const highGroup = studentScores.slice(0, groupSize).map(x => x.row);
-            const lowGroup = studentScores.slice(N - groupSize).map(x => x.row);
+		const N = studentRows.length;
+		document.getElementById('import-student-count').innerText = `${N} คน`;
+		document.getElementById('import-type-badge').innerText = 'คำนวณจากคะแนนดิบนิสิต';
+		document.getElementById('import-type-badge').className = 'px-2 py-0.5 bg-emerald-600 text-white font-bold rounded-md mr-1';
 
-            // Compute Item Statistics for all items
-            let calculatedItems = itemCols.map(item => {
-                const keyAns = parseFloat(keyRow[item.colIndex]);
-                
-                let correctCount = 0;
-                let countA = 0, countB = 0, countC = 0, countD = 0;
+		if (N === 0) {
+			alert('ไม่พบแถวข้อมูลคำตอบของนิสิตในไฟล์');
+			return [];
+		}
 
-                studentRows.forEach(row => {
-                    const ans = parseFloat(row[item.colIndex]);
-                    if (!isNaN(ans)) {
-                        if (ans === keyAns) correctCount++;
-                        if (ans === 1) countA++;
-                        else if (ans === 2) countB++;
-                        else if (ans === 3) countC++;
-                        else if (ans === 4) countD++;
-                    }
-                });
+		// 4. Calculate total correct score per student & rank High/Low group (27%)
+		let studentScores = studentRows.map(row => {
+			let score = 0;
+			itemCols.forEach(item => {
+				const studentAns = parseFloat(row[item.colIndex]);
+				const keyAns = parseFloat(keyRow[item.colIndex]);
+				if (!isNaN(studentAns) && !isNaN(keyAns) && studentAns === keyAns) {
+					score += 1;
+				}
+			});
+			return { row: row, score: score };
+		});
 
-                // High & Low group correct counts
-                let highCorrect = 0;
-                highGroup.forEach(row => {
-                    if (parseFloat(row[item.colIndex]) === keyAns) highCorrect++;
-                });
+		studentScores.sort((a, b) => b.score - a.score);
 
-                let lowCorrect = 0;
-                lowGroup.forEach(row => {
-                    if (parseFloat(row[item.colIndex]) === keyAns) lowCorrect++;
-                });
+		const groupSize = Math.max(1, Math.ceil(N * 0.27));
+		const highGroup = studentScores.slice(0, groupSize).map(x => x.row);
+		const lowGroup = studentScores.slice(N - groupSize).map(x => x.row);
 
-                let p = parseFloat((correctCount / N).toFixed(2));
-                let r = parseFloat(((highCorrect - lowCorrect) / groupSize).toFixed(2));
-                r = Math.min(1.0, Math.max(-1.0, r));
+		// 5. Compute Item Statistics (p, r, distractor %)
+		let calculatedItems = itemCols.map(item => {
+			const keyAns = parseFloat(keyRow[item.colIndex]);
+			let correctCount = 0;
+			let countA = 0, countB = 0, countC = 0, countD = 0;
 
-                let aPct = parseFloat(((countA / N) * 100).toFixed(1));
-                let bPct = parseFloat(((countB / N) * 100).toFixed(1));
-                let cPct = parseFloat(((countC / N) * 100).toFixed(1));
-                let dPct = parseFloat(((countD / N) * 100).toFixed(1));
+			studentRows.forEach(row => {
+				const ans = parseFloat(row[item.colIndex]);
+				if (!isNaN(ans)) {
+					if (ans === keyAns) correctCount++;
+					if (ans === 1) countA++;
+					else if (ans === 2) countB++;
+					else if (ans === 3) countC++;
+					else if (ans === 4) countD++;
+				}
+			});
 
-                return {
-                    year: year,
-                    exam_round: round,
-                    item_no: item.itemNo,
-                    p_value: p,
-                    r_value: r,
-                    distractor_a: aPct,
-                    distractor_b: bPct,
-                    distractor_c: cPct,
-                    distractor_d: dPct,
-                    modified_angoff_mpl: 60.0,
-                    status: evaluateItemStatus(p, r)
-                };
-            });
+			let highCorrect = 0;
+			highGroup.forEach(row => {
+				if (parseFloat(row[item.colIndex]) === keyAns) highCorrect++;
+			});
 
-            // Sort by item number
-            calculatedItems.sort((a, b) => a.item_no - b.item_no);
-            return calculatedItems;
-        }
+			let lowCorrect = 0;
+			lowGroup.forEach(row => {
+				if (parseFloat(row[item.colIndex]) === keyAns) lowCorrect++;
+			});
+
+			let p = parseFloat((correctCount / N).toFixed(2));
+			let r = parseFloat(((highCorrect - lowCorrect) / groupSize).toFixed(2));
+			r = Math.min(1.0, Math.max(-1.0, r));
+
+			let aPct = parseFloat(((countA / N) * 100).toFixed(1));
+			let bPct = parseFloat(((countB / N) * 100).toFixed(1));
+			let cPct = parseFloat(((countC / N) * 100).toFixed(1));
+			let dPct = parseFloat(((countD / N) * 100).toFixed(1));
+
+			return {
+				year: year,
+				exam_round: round,
+				item_no: item.itemNo,
+				p_value: p,
+				r_value: r,
+				distractor_a: aPct,
+				distractor_b: bPct,
+				distractor_c: cPct,
+				distractor_d: dPct,
+				modified_angoff_mpl: 60.0,
+				status: evaluateItemStatus(p, r)
+			};
+		});
+
+		calculatedItems.sort((a, b) => a.item_no - b.item_no);
+		return calculatedItems;
+	}
 
         async function executeBatchImport() {
             if (parsedImportData.length === 0) return;
