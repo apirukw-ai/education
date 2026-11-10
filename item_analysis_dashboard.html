@@ -107,8 +107,8 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">รอบการสอบ</label>
                     <select id="select-round" onchange="changeFilter()" class="bg-slate-50 border border-slate-300 text-slate-800 text-sm font-bold rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="final" selected>ปลายภาค (Final Exam)</option>
-                        <option value="midterm">กลางภาค (Midterm Exam)</option>
+                        <option value="midterm" selected>กลางภาค (Midterm Exam)</option>
+                        <option value="final">ปลายภาค (Final Exam)</option>
                         <option value="comprehensive">ประมวลความรู้ (Comprehensive)</option>
                     </select>
                 </div>
@@ -116,7 +116,7 @@
 
             <div class="flex items-center gap-3">
                 <span id="active-info-badge" class="px-3.5 py-1.5 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-xl border border-indigo-200">
-                    ปีการศึกษา 2568 - ปลายภาค (Final)
+                    ปีการศึกษา 2568 - กลางภาค (Midterm)
                 </span>
                 <button onclick="downloadSampleTemplate()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center gap-1.5" title="ดาวน์โหลดไฟล์ตัวอย่าง CSV สำหรับนำเข้า">
                     <i class="fa-solid fa-download text-indigo-600"></i> ตัวอย่างไฟล์นำเข้า
@@ -128,31 +128,31 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow">
                 <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">จำนวนข้อสอบทั้งหมด</div>
-                <div id="kpi-total-items" class="text-3xl font-bold text-slate-800 mt-2">80 ข้อ</div>
+                <div id="kpi-total-items" class="text-3xl font-bold text-slate-800 mt-2">0 ข้อ</div>
                 <div class="text-xs text-slate-500 mt-1">ข้อสอบฉบับสมบูรณ์</div>
             </div>
 
             <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow">
                 <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">ความน่าเชื่อถือ (KR-20)</div>
-                <div id="kpi-kr20" class="text-3xl font-bold text-emerald-600 mt-2">0.84</div>
-                <div class="text-xs text-emerald-600 mt-1 font-semibold">ระดับคุณภาพดีมาก (≥ 0.80)</div>
+                <div id="kpi-kr20" class="text-3xl font-bold text-emerald-600 mt-2">0.00</div>
+                <div class="text-xs text-emerald-600 mt-1 font-semibold">ระดับคุณภาพ</div>
             </div>
 
             <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow">
                 <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">ความยากง่ายเฉลี่ย (Mean p)</div>
-                <div id="kpi-mean-p" class="text-3xl font-bold text-blue-600 mt-2">0.69</div>
+                <div id="kpi-mean-p" class="text-3xl font-bold text-blue-600 mt-2">0.00</div>
                 <div class="text-xs text-slate-500 mt-1">เกณฑ์ปานกลาง (0.20 - 0.80)</div>
             </div>
 
             <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow">
                 <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">อำนาจจำแนกเฉลี่ย (Mean r)</div>
-                <div id="kpi-mean-r" class="text-3xl font-bold text-purple-600 mt-2">0.38</div>
+                <div id="kpi-mean-r" class="text-3xl font-bold text-purple-600 mt-2">0.00</div>
                 <div class="text-xs text-slate-500 mt-1">จำแนกได้ดี (≥ 0.20)</div>
             </div>
 
             <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow bg-gradient-to-br from-red-50 to-white border-red-200">
                 <div class="text-xs font-semibold text-red-700 uppercase tracking-wider">MPL (Modified Cohen)</div>
-                <div id="kpi-cohen-mpl" class="text-3xl font-extrabold text-red-600 mt-2">51.79</div>
+                <div id="kpi-cohen-mpl" class="text-3xl font-extrabold text-red-600 mt-2">0.00</div>
                 <div class="text-xs text-red-600 mt-1 font-semibold">คำนวณจาก 0.65 × P90</div>
             </div>
         </div>
@@ -254,14 +254,14 @@
             </div>
 
             <div class="space-y-4">
-                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-xs text-indigo-800 space-y-1">
-                    <div class="font-bold flex items-center gap-1">
-                        <i class="fa-solid fa-circle-info"></i> รูปแบบคอลัมน์ของไฟล์ที่รองรับ:
+                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 text-xs text-indigo-800 space-y-1.5">
+                    <div class="font-bold flex items-center gap-1.5 text-indigo-900">
+                        <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i> รองรับไฟล์ 2 รูปแบบอัตโนมัติ:
                     </div>
-                    <p>ไฟล์ CSV หรือ Excel (.xlsx) ที่มีหัวคอลัมน์ ดังนี้:</p>
-                    <div class="font-mono bg-white p-2 rounded border border-indigo-200 text-[11px] overflow-x-auto">
-                        Item, p, r, OptionA, OptionB, OptionC, OptionD, Angoff
-                    </div>
+                    <ul class="list-disc pl-4 space-y-1 text-slate-700">
+                        <li><strong>ไฟล์คะแนนดิบรายข้อของนิสิต</strong> (มีคอลัมน์ ข้อ 1..ข้อ N, มีแถวเฉลย) &rarr; <span class="text-emerald-700 font-semibold">ระบบจะคำนวณค่า p, r และ %ตัวเลือกให้ครบถ้วนทุกข้ออัตโนมัติ!</span></li>
+                        <li><strong>ไฟล์สรุปผลการวิเคราะห์ข้อสอบ</strong> (มีคอลัมน์ Item, p, r, OptionA-D)</li>
+                    </ul>
                 </div>
 
                 <!-- Dropzone / File Selector -->
@@ -270,27 +270,30 @@
                     <div class="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto text-xl mb-3">
                         <i class="fa-solid fa-cloud-arrow-up"></i>
                     </div>
-                    <div class="text-sm font-semibold text-slate-700">คลิกเพื่อเลือกไฟล์ CSV หรือ Excel</div>
+                    <div class="text-sm font-semibold text-slate-700">คลิกเพื่อเลือกไฟล์ Excel (.xlsx) หรือ CSV</div>
                     <div class="text-xs text-slate-400 mt-1">หรือลากไฟล์มาวางในบริเวณนี้</div>
                 </div>
 
                 <!-- Preview Area -->
                 <div id="import-preview-area" class="hidden space-y-2">
-                    <div class="flex justify-between items-center text-xs font-semibold text-slate-600">
-                        <span>ตัวอย่างข้อมูลที่จะนำเข้า (<span id="import-count">0</span> ข้อ):</span>
-                        <span id="import-year-round-tag" class="text-indigo-600">ปี 2568 - Final</span>
+                    <div class="flex justify-between items-center text-xs font-semibold text-slate-600 bg-slate-100 p-2.5 rounded-xl border border-slate-200">
+                        <div>
+                            <span id="import-type-badge" class="px-2 py-0.5 bg-emerald-600 text-white font-bold rounded-md mr-1">ไฟล์คะแนนดิบ</span>
+                            <span>คำนวณได้ <strong id="import-count" class="text-indigo-600 font-bold">0</strong> ข้อ (<span id="import-student-count">0</span> นิสิต)</span>
+                        </div>
+                        <span id="import-year-round-tag" class="text-indigo-700 font-bold">ปี 2568 - Midterm</span>
                     </div>
-                    <div class="max-h-40 overflow-y-auto border border-slate-200 rounded-xl">
+                    <div class="max-h-44 overflow-y-auto border border-slate-200 rounded-xl">
                         <table class="w-full text-left text-xs">
                             <thead class="bg-slate-100 sticky top-0">
                                 <tr>
                                     <th class="p-2">ข้อที่</th>
-                                    <th class="p-2 text-center">p</th>
-                                    <th class="p-2 text-center">r</th>
-                                    <th class="p-2 text-center">A%</th>
-                                    <th class="p-2 text-center">B%</th>
-                                    <th class="p-2 text-center">C%</th>
-                                    <th class="p-2 text-center">D%</th>
+                                    <th class="p-2 text-center">ความยาก (p)</th>
+                                    <th class="p-2 text-center">อำนาจจำแนก (r)</th>
+                                    <th class="p-2 text-center">A (%)</th>
+                                    <th class="p-2 text-center">B (%)</th>
+                                    <th class="p-2 text-center">C (%)</th>
+                                    <th class="p-2 text-center">D (%)</th>
                                 </tr>
                             </thead>
                             <tbody id="import-preview-body" class="divide-y divide-slate-100 font-mono">
@@ -424,7 +427,8 @@
             const year = document.getElementById('select-year').value;
             const round = document.getElementById('select-round').value;
 
-            document.getElementById('active-info-badge').innerText = `ปีการศึกษา ${year} - ${round === 'final' ? 'ปลายภาค (Final)' : round === 'midterm' ? 'กลางภาค (Midterm)' : 'ประมวลความรู้'}`;
+            const roundText = round === 'final' ? 'ปลายภาค (Final)' : round === 'midterm' ? 'กลางภาค (Midterm)' : 'ประมวลความรู้';
+            document.getElementById('active-info-badge').innerText = `ปีการศึกษา ${year} - ${roundText}`;
 
             try {
                 const { data, error } = await supabaseClient
@@ -437,11 +441,11 @@
                 if (!error && data && data.length > 0) {
                     itemsData = data;
                 } else {
-                    itemsData = generateDefaultItems(year, round);
+                    itemsData = [];
                 }
             } catch (err) {
                 console.error('Supabase load error:', err);
-                itemsData = generateDefaultItems(year, round);
+                itemsData = [];
             }
 
             renderDashboard();
@@ -449,36 +453,6 @@
 
         function changeFilter() {
             loadItemData();
-        }
-
-        // Generate default mock items if database is empty
-        function generateDefaultItems(year, round) {
-            let list = [];
-            let count = 80;
-            for (let i = 1; i <= count; i++) {
-                let p = parseFloat((0.35 + Math.random() * 0.50).toFixed(2));
-                let r = parseFloat((0.20 + Math.random() * 0.45).toFixed(2));
-                let a = Math.round((1 - p) * 100 * 0.4);
-                let b = Math.round(p * 100);
-                let c = Math.round((1 - p) * 100 * 0.3);
-                let d = 100 - (a + b + c);
-
-                list.push({
-                    id: i,
-                    year: year,
-                    exam_round: round,
-                    item_no: i,
-                    p_value: p,
-                    r_value: r,
-                    distractor_a: a,
-                    distractor_b: b,
-                    distractor_c: c,
-                    distractor_d: d,
-                    modified_angoff_mpl: 60.0,
-                    status: evaluateItemStatus(p, r)
-                });
-            }
-            return list;
         }
 
         function evaluateItemStatus(p, r) {
@@ -500,10 +474,10 @@
             document.getElementById('kpi-total-items').innerText = `${count} ข้อ`;
 
             if (count === 0) {
-                document.getElementById('kpi-kr20').innerText = '--';
-                document.getElementById('kpi-mean-p').innerText = '--';
-                document.getElementById('kpi-mean-r').innerText = '--';
-                document.getElementById('kpi-cohen-mpl').innerText = '--';
+                document.getElementById('kpi-kr20').innerText = '0.00';
+                document.getElementById('kpi-mean-p').innerText = '0.00';
+                document.getElementById('kpi-mean-r').innerText = '0.00';
+                document.getElementById('kpi-cohen-mpl').innerText = '0.00';
                 return;
             }
 
@@ -516,7 +490,7 @@
             const sumPQ = itemsData.reduce((acc, x) => acc + (x.p_value * (1 - x.p_value)), 0);
             const varTotal = count * 0.18; 
             const kr20 = (count / (count - 1)) * (1 - (sumPQ / varTotal));
-            const clampedKR20 = Math.min(0.95, Math.max(0.65, kr20)).toFixed(2);
+            const clampedKR20 = Math.min(0.98, Math.max(0.40, kr20)).toFixed(2);
 
             // Estimated P90 for Modified Cohen
             const sortedP = [...itemsData].map(x => x.p_value * 100).sort((a, b) => a - b);
@@ -599,7 +573,7 @@
             tbody.innerHTML = '';
 
             if (itemsData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-8 text-slate-400 text-xs">ไม่มีข้อมูลข้อสอบในรอบนี้ กดปุ่ม "นำเข้าไฟล์ CSV/Excel" หรือ "เพิ่มข้อใหม่"</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="text-center py-10 text-slate-400 text-sm">ยังไม่มีข้อมูลข้อสอบในรอบนี้ กดปุ่ม <strong>"นำเข้าไฟล์ CSV / Excel"</strong> ด้านบนเพื่อเพิ่มข้อมูล</td></tr>`;
                 return;
             }
 
@@ -647,7 +621,7 @@
             });
         }
 
-        // --- FILE IMPORT LOGIC (CSV & EXCEL) ---
+        // --- SMART FILE IMPORT LOGIC (BOTH RAW MATRIX & ITEM SUMMARY) ---
         function openImportModal() {
             document.getElementById('importModal').classList.remove('hidden');
             document.getElementById('file-input').value = '';
@@ -670,41 +644,61 @@
                 const workbook = XLSX.read(data, { type: 'array' });
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
-                const json = XLSX.utils.sheet_to_json(worksheet);
+                
+                // Parse 2D raw array and standard object json
+                const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+                const jsonObjects = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
-                parseUploadedJSON(json);
+                parseUploadedData(rawRows, jsonObjects);
             };
             reader.readAsArrayBuffer(file);
         }
 
-        function parseUploadedJSON(json) {
+        function parseUploadedData(rawRows, jsonObjects) {
             const year = document.getElementById('select-year').value;
             const round = document.getElementById('select-round').value;
 
-            parsedImportData = json.map((row, index) => {
-                let itemNo = row['Item'] || row['item'] || row['ข้อที่'] || (index + 1);
-                let p = parseFloat(row['p'] || row['P'] || row['Difficulty'] || row['ความยากง่าย'] || 0.5);
-                let r = parseFloat(row['r'] || row['R'] || row['Discrimination'] || row['อำนาจจำแนก'] || 0.3);
-                let a = parseFloat(row['OptionA'] || row['DistractorA'] || row['A'] || 10);
-                let b = parseFloat(row['OptionB'] || row['DistractorB'] || row['B'] || 70);
-                let c = parseFloat(row['OptionC'] || row['DistractorC'] || row['C'] || 10);
-                let d = parseFloat(row['OptionD'] || row['DistractorD'] || row['D'] || 10);
-                let angoff = parseFloat(row['Angoff'] || row['AngoffMPL'] || 60);
-
-                return {
-                    year: year,
-                    exam_round: round,
-                    item_no: parseInt(itemNo),
-                    p_value: p,
-                    r_value: r,
-                    distractor_a: a,
-                    distractor_b: b,
-                    distractor_c: c,
-                    distractor_d: d,
-                    modified_angoff_mpl: angoff,
-                    status: evaluateItemStatus(p, r)
-                };
+            // 1. Check if format is Pre-analyzed Item Summary (has 'p' and 'r' columns)
+            const isSummaryFormat = jsonObjects.length > 0 && jsonObjects.some(row => {
+                const keys = Object.keys(row).map(k => k.toLowerCase().trim());
+                return keys.includes('p') || keys.includes('difficulty') || keys.includes('ความยากง่าย');
             });
+
+            let studentCount = 0;
+
+            if (isSummaryFormat) {
+                // Pre-calculated summary format
+                parsedImportData = jsonObjects.map((row, index) => {
+                    let itemNo = row['Item'] || row['item'] || row['ข้อที่'] || (index + 1);
+                    let p = parseFloat(row['p'] || row['P'] || row['Difficulty'] || row['ความยากง่าย'] || 0.5);
+                    let r = parseFloat(row['r'] || row['R'] || row['Discrimination'] || row['อำนาจจำแนก'] || 0.3);
+                    let a = parseFloat(row['OptionA'] || row['DistractorA'] || row['A'] || 10);
+                    let b = parseFloat(row['OptionB'] || row['DistractorB'] || row['B'] || 70);
+                    let c = parseFloat(row['OptionC'] || row['DistractorC'] || row['C'] || 10);
+                    let d = parseFloat(row['OptionD'] || row['DistractorD'] || row['D'] || 10);
+                    let angoff = parseFloat(row['Angoff'] || row['AngoffMPL'] || 60);
+
+                    return {
+                        year: year,
+                        exam_round: round,
+                        item_no: parseInt(itemNo),
+                        p_value: p,
+                        r_value: r,
+                        distractor_a: a,
+                        distractor_b: b,
+                        distractor_c: c,
+                        distractor_d: d,
+                        modified_angoff_mpl: angoff,
+                        status: evaluateItemStatus(p, r)
+                    };
+                });
+                document.getElementById('import-type-badge').innerText = 'ไฟล์สรุปผลรายข้อ';
+                document.getElementById('import-type-badge').className = 'px-2 py-0.5 bg-blue-600 text-white font-bold rounded-md mr-1';
+                document.getElementById('import-student-count').innerText = 'สรุปสำเร็จ';
+            } else {
+                // Raw Score / Student Response Matrix (like คะแนน-180432-M2-68.xlsx)
+                parsedImportData = processRawMatrix(rawRows, year, round);
+            }
 
             if (parsedImportData.length > 0) {
                 document.getElementById('import-count').innerText = parsedImportData.length;
@@ -730,6 +724,147 @@
                 document.getElementById('import-preview-area').classList.remove('hidden');
                 document.getElementById('btn-submit-import').disabled = false;
             }
+        }
+
+        // Auto-calculate p, r, distractor % from Raw Score Matrix
+        function processRawMatrix(rawRows, year, round) {
+            // Find header row (row containing item names like 'ข้อ 1', 'ข้อ 2'...)
+            let headerRowIndex = -1;
+            let itemCols = []; // { colIndex: number, itemNo: number }
+
+            for (let r = 0; r < Math.min(10, rawRows.length); r++) {
+                const row = rawRows[r];
+                let foundItems = [];
+                row.forEach((cell, colIdx) => {
+                    const cellStr = String(cell).trim();
+                    const match = cellStr.match(/^(?:ข้อ|item|q)\s*(\d+)/i);
+                    if (match) {
+                        foundItems.push({ colIndex: colIdx, itemNo: parseInt(match[1]) });
+                    }
+                });
+                if (foundItems.length >= 5) {
+                    headerRowIndex = r;
+                    itemCols = foundItems;
+                    break;
+                }
+            }
+
+            if (headerRowIndex === -1 || itemCols.length === 0) {
+                alert('ไม่พบคอลัมน์ข้อสอบ (เช่น ข้อ 1, ข้อ 2...) ในไฟล์ กรุณาตรวจสอบรูปแบบไฟล์ Excel');
+                return [];
+            }
+
+            // Find Answer Key Row (row after header or row containing key)
+            let keyRow = rawRows[headerRowIndex + 1];
+            
+            // Extract Student Rows (rows containing valid student ID or response data)
+            let studentRows = [];
+            for (let r = headerRowIndex + 2; r < rawRows.length; r++) {
+                const row = rawRows[r];
+                const firstColStr = String(row[0] || '').trim().toLowerCase();
+                const studentIdStr = String(row[1] || '').trim();
+
+                // Skip summary rows (Max, Min, AVE)
+                if (firstColStr.includes('max') || firstColStr.includes('min') || firstColStr.includes('ave') || firstColStr.includes('เฉลี่ย')) continue;
+                if (String(row[2] || '').toLowerCase().includes('max') || String(row[2] || '').toLowerCase().includes('ave')) continue;
+
+                // Check if row has numeric values in item columns
+                let hasItemData = itemCols.some(item => {
+                    const val = parseFloat(row[item.colIndex]);
+                    return !isNaN(val) && val > 0;
+                });
+
+                if (hasItemData) {
+                    studentRows.push(row);
+                }
+            }
+
+            const N = studentRows.length;
+            document.getElementById('import-student-count').innerText = `${N} คน`;
+            document.getElementById('import-type-badge').innerText = 'คำนวณจากคะแนนดิบนิสิต';
+            document.getElementById('import-type-badge').className = 'px-2 py-0.5 bg-emerald-600 text-white font-bold rounded-md mr-1';
+
+            if (N === 0) {
+                alert('ไม่พบแถวข้อมูลคำตอบของนิสิตในไฟล์');
+                return [];
+            }
+
+            // Calculate total correct score for each student to rank High/Low groups
+            let studentScores = studentRows.map(row => {
+                let score = 0;
+                itemCols.forEach(item => {
+                    const studentAns = parseFloat(row[item.colIndex]);
+                    const keyAns = parseFloat(keyRow[item.colIndex]);
+                    if (!isNaN(studentAns) && !isNaN(keyAns) && studentAns === keyAns) {
+                        score += 1;
+                    }
+                });
+                return { row: row, score: score };
+            });
+
+            // Sort students descending by score
+            studentScores.sort((a, b) => b.score - a.score);
+
+            const groupSize = Math.max(1, Math.ceil(N * 0.27));
+            const highGroup = studentScores.slice(0, groupSize).map(x => x.row);
+            const lowGroup = studentScores.slice(N - groupSize).map(x => x.row);
+
+            // Compute Item Statistics for all items
+            let calculatedItems = itemCols.map(item => {
+                const keyAns = parseFloat(keyRow[item.colIndex]);
+                
+                let correctCount = 0;
+                let countA = 0, countB = 0, countC = 0, countD = 0;
+
+                studentRows.forEach(row => {
+                    const ans = parseFloat(row[item.colIndex]);
+                    if (!isNaN(ans)) {
+                        if (ans === keyAns) correctCount++;
+                        if (ans === 1) countA++;
+                        else if (ans === 2) countB++;
+                        else if (ans === 3) countC++;
+                        else if (ans === 4) countD++;
+                    }
+                });
+
+                // High & Low group correct counts
+                let highCorrect = 0;
+                highGroup.forEach(row => {
+                    if (parseFloat(row[item.colIndex]) === keyAns) highCorrect++;
+                });
+
+                let lowCorrect = 0;
+                lowGroup.forEach(row => {
+                    if (parseFloat(row[item.colIndex]) === keyAns) lowCorrect++;
+                });
+
+                let p = parseFloat((correctCount / N).toFixed(2));
+                let r = parseFloat(((highCorrect - lowCorrect) / groupSize).toFixed(2));
+                r = Math.min(1.0, Math.max(-1.0, r));
+
+                let aPct = parseFloat(((countA / N) * 100).toFixed(1));
+                let bPct = parseFloat(((countB / N) * 100).toFixed(1));
+                let cPct = parseFloat(((countC / N) * 100).toFixed(1));
+                let dPct = parseFloat(((countD / N) * 100).toFixed(1));
+
+                return {
+                    year: year,
+                    exam_round: round,
+                    item_no: item.itemNo,
+                    p_value: p,
+                    r_value: r,
+                    distractor_a: aPct,
+                    distractor_b: bPct,
+                    distractor_c: cPct,
+                    distractor_d: dPct,
+                    modified_angoff_mpl: 60.0,
+                    status: evaluateItemStatus(p, r)
+                };
+            });
+
+            // Sort by item number
+            calculatedItems.sort((a, b) => a.item_no - b.item_no);
+            return calculatedItems;
         }
 
         async function executeBatchImport() {
