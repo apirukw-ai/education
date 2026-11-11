@@ -710,8 +710,8 @@
 
         function updateKPIs(passCount, failCount) {
             const total = rawStudentData.length;
-            const passPct = total > 0 ? ((passCount / total) * 100).toFixed(1) : 0;
-            const failPct = total > 0 ? ((failCount / total) * 100).toFixed(1) : 0;
+            const passPct = total > 0 ? ((passCount / total) * 100).toFixed(2) : '0.00';
+            const failPct = total > 0 ? ((failCount / total) * 100).toFixed(2) : '0.00';
 
             document.getElementById('kpi-total-students').innerText = `${total} คน`;
             document.getElementById('kpi-pass-count').innerText = `${passCount} คน (${passPct}%)`;
@@ -720,8 +720,8 @@
             document.getElementById('kpi-mpl-max').innerText = `จากคะแนนเต็ม ${totalMaxScore}`;
 
             const scores = rawStudentData.map(s => s.total);
-            const mean = scores.length > 0 ? (scores.reduce((a,b)=>a+b,0)/total).toFixed(1) : 0;
-            const max = scores.length > 0 ? Math.max(...scores) : 0;
+            const mean = scores.length > 0 ? (scores.reduce((a,b)=>a+b,0)/total).toFixed(2) : '0.00';
+            const max = scores.length > 0 ? Math.max(...scores).toFixed(2) : '0.00';
 
             const variance = scores.length > 1 ? (scores.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (total - 1)) : 0;
             const sd = Math.sqrt(variance).toFixed(2);
@@ -747,7 +747,8 @@
 
             grades.forEach((g, idx) => {
                 const count = gradeCounts[g];
-                const pct = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+                // กำหนดเปอร์เซ็นต์สัดส่วนเป็น 2 ตำแหน่ง
+                const pct = total > 0 ? ((count / total) * 100).toFixed(2) : '0.00';
 
                 chartLabels.push(g);
                 chartData.push(count);
@@ -804,7 +805,7 @@
                             callbacks: {
                                 label: function(context) {
                                     const total = gradedStudents.length;
-                                    const pct = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
+                                    const pct = total > 0 ? ((context.raw / total) * 100).toFixed(2) : '0.00';
                                     return `จำนวน: ${context.raw} คน (${pct}%)`;
                                 }
                             }
@@ -860,15 +861,15 @@
                     ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">ผ่านเกณฑ์</span>`
                     : `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-50 text-red-700 border border-red-200">ตกเกณฑ์</span>`;
 
-                // กรองและตัดทศนิยมรายส่วนให้สะอาด ไม่เกิน 2 ตำแหน่ง
+                // แสดงผลคะแนนรายส่วนแบบตัดทศนิยมไม่ปัด
                 const sectionCells = sectionKeys.map(s => {
                     const rawVal = student.sections[s] !== undefined ? student.sections[s] : 0;
-                    const cleanVal = Number(parseFloat(rawVal).toFixed(2));
+                    const cleanVal = truncate2Decimals(rawVal);
                     return `<td class="py-3 px-4 text-center text-slate-600">${cleanVal}</td>`;
                 }).join('');
 
-                const cleanTotal = Number(parseFloat(student.total).toFixed(2));
-                const cleanTScore = Number(parseFloat(student.tScore).toFixed(2));
+                const cleanTotal = truncate2Decimals(student.total);
+                const cleanTScore = truncate2Decimals(student.tScore);
 
                 tr.innerHTML = `
                     <td class="py-3 px-4 text-slate-400 font-mono">${index + 1}</td>
@@ -912,6 +913,15 @@
                 parseUploadedStudentData(jsonData);
             };
             reader.readAsArrayBuffer(file);
+        }
+
+		// ฟังก์ชันตัดทศนิยมให้เหลือ 2 ตำแหน่งแบบไม่ปัดขึ้น (Truncate)
+        function truncate2Decimals(val) {
+            const num = parseFloat(val);
+            if (isNaN(num)) return 0;
+            const fixedStr = num.toFixed(4);
+            const match = fixedStr.match(/^-?\d+(?:\.\d{0,2})?/);
+            return match ? parseFloat(match[0]) : num;
         }
 
         function parseUploadedStudentData(jsonData) {
@@ -971,7 +981,8 @@
                 const sections = {};
                 let total = 0;
                 secKeys.forEach(sec => {
-                    const val = parseFloat(row[sec]) || 0;
+                    // ตัดทศนิยมรายส่วน เหลือ 2 ตำแหน่งแบบไม่ปัด
+                    const val = truncate2Decimals(row[sec]);
                     sections[sec] = val;
                     total += val;
                 });
@@ -980,7 +991,7 @@
                     id: studentId,
                     name: studentName,
                     sections: sections,
-                    total: parseFloat(total.toFixed(2))
+                    total: truncate2Decimals(total)
                 };
             });
 
