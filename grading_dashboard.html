@@ -426,7 +426,17 @@
 
         // 2. Save Current Grades to Supabase
         async function saveStudentDataToSupabase() {
-            if (gradedStudents.length === 0) {
+            // 🔒 1. แทรกโค้ดเช็ครหัส PIN ตรงนี้
+			const SECRET_PIN = "64123"; // 👈 เปลี่ยน 1234 เป็นรหัสผ่านที่คุณต้องการ
+			const inputPin = prompt("🔒 กรุณากรอกรหัสผ่านเพื่อบันทึกข้อมูลสู่ Supabase:");
+			
+			if (inputPin === null) return; // ถ้านิสิต/ผู้ใช้กด Cancel ให้ยกเลิก
+			if (inputPin !== SECRET_PIN) {
+				showToast('รหัสผ่านไม่ถูกต้อง! ไม่สามารถบันทึกได้', 'error');
+				return;
+			}
+			
+			if (gradedStudents.length === 0) {
                 showToast('ไม่มีข้อมูลเกรดที่จะบันทึก', 'error');
                 return;
             }
