@@ -667,7 +667,7 @@
                 const activeGradesLowToHigh = [...activeGradesHighToLow].reverse();
                 const N = activeGradesLowToHigh.length;
 
-                let tScores = passStudents.map(s => (50 + 10 * ((s.total - passMean) / passSD)));
+                let tScores = passStudents.map(s => (s.tScore !== undefined ? s.tScore : (50 + 10 * ((s.total - passMean) / passSD))));
                 if (tScores.length === 0) tScores = [50];
                 
                 const tMax = Math.max(...tScores);
@@ -685,20 +685,20 @@
                 const gradeCutoffT = {};
 
                 if (N % 2 === 0) {
-                    // กรณี N เป็นเลขคู่
                     const midIndex = N / 2;
                     for (let k = 1; k < N; k++) {
                         const gradeName = activeGradesLowToHigh[k];
                         const tCut = 50 + (k - midIndex) * deltaT;
                         gradeCutoffT[gradeName] = parseFloat(tCut.toFixed(2));
+                        cutoffs[gradeName] = parseFloat(tCut.toFixed(2));
                     }
                 } else {
-                    // กรณี N เป็นเลขคี่
                     const midIndex = (N - 1) / 2;
                     for (let k = 1; k < N; k++) {
                         const gradeName = activeGradesLowToHigh[k];
                         const tCut = 50 + (k - midIndex - 0.5) * deltaT;
                         gradeCutoffT[gradeName] = parseFloat(tCut.toFixed(2));
+                        cutoffs[gradeName] = parseFloat(tCut.toFixed(2));
                     }
                 }
 
@@ -798,6 +798,7 @@
 
         function renderGradeCutoffsDisplay() {
             const container = document.getElementById('grade-cutoffs-display');
+            if (!container) return;
             container.innerHTML = '';
 
             const grades = ['F', 'D', 'D+', 'C', 'C+', 'B', 'B+', 'A'];
@@ -817,7 +818,8 @@
                 if (g === 'F') {
                     text = `< ${totalMPL}`;
                 } else if (currentGradingMethod === 'normT') {
-                    text = `T ≥ ${gradeCutoffs[g]}`;
+                    const val = gradeCutoffs[g] !== undefined ? gradeCutoffs[g] : (gradeCutoffs.normT_cutoffs ? gradeCutoffs.normT_cutoffs[g] : undefined);
+                    text = val !== undefined ? `T ≥ ${val}` : `≥ MPL (${totalMPL})`;
                 } else {
                     text = `≥ ${gradeCutoffs[g]}`;
                 }
@@ -853,6 +855,7 @@
 
         function renderGradeSummary() {
             const tbody = document.getElementById('grade-summary-tbody');
+            if (!tbody) return;
             tbody.innerHTML = '';
 
             const grades = ['F', 'D', 'D+', 'C', 'C+', 'B', 'B+', 'A'];
@@ -868,16 +871,24 @@
 
             grades.forEach((g, idx) => {
                 const count = gradeCounts[g];
-                // กำหนดเปอร์เซ็นต์สัดส่วนเป็น 2 ตำแหน่ง
                 const pct = total > 0 ? ((count / total) * 100).toFixed(2) : '0.00';
 
                 chartLabels.push(g);
                 chartData.push(count);
 
                 let rangeText = '';
-                if (g === 'F') rangeText = `< ${totalMPL} คะแนน`;
-                else if (currentGradingMethod === 'normT') rangeText = `T-Score ≥ ${gradeCutoffs[g]}`;
-                else rangeText = `≥ ${gradeCutoffs[g]} คะแนน`;
+                if (g === 'F') {
+                    rangeText = `< ${totalMPL} คะแนน`;
+                } else if (currentGradingMethod === 'normT') {
+                    const val = gradeCutoffs[g] !== undefined ? gradeCutoffs[g] : (gradeCutoffs.normT_cutoffs ? gradeCutoffs.normT_cutoffs[g] : undefined);
+                    if (val !== undefined) {
+                        rangeText = `T-Score ≥ ${val}`;
+                    } else {
+                        rangeText = `คะแนนดิบ ≥ ${totalMPL}`;
+                    }
+                } else {
+                    rangeText = `≥ ${gradeCutoffs[g]} คะแนน`;
+                }
 
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
