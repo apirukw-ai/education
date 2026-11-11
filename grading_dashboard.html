@@ -860,13 +860,23 @@
                     ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">ผ่านเกณฑ์</span>`
                     : `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-50 text-red-700 border border-red-200">ตกเกณฑ์</span>`;
 
+                // กรองและตัดทศนิยมรายส่วนให้สะอาด ไม่เกิน 2 ตำแหน่ง
+                const sectionCells = sectionKeys.map(s => {
+                    const rawVal = student.sections[s] !== undefined ? student.sections[s] : 0;
+                    const cleanVal = Number(parseFloat(rawVal).toFixed(2));
+                    return `<td class="py-3 px-4 text-center text-slate-600">${cleanVal}</td>`;
+                }).join('');
+
+                const cleanTotal = Number(parseFloat(student.total).toFixed(2));
+                const cleanTScore = Number(parseFloat(student.tScore).toFixed(2));
+
                 tr.innerHTML = `
                     <td class="py-3 px-4 text-slate-400 font-mono">${index + 1}</td>
                     <td class="py-3 px-4 font-mono font-bold text-slate-800">${student.id}</td>
                     <td class="py-3 px-4 font-semibold text-slate-700">${student.name}</td>
-                    ${sectionKeys.map(s => `<td class="py-3 px-4 text-center text-slate-600">${student.sections[s] || 0}</td>`).join('')}
-                    <td class="py-3 px-4 text-center font-extrabold text-indigo-700 bg-indigo-50/30 text-sm">${student.total}</td>
-                    <td class="py-3 px-4 text-center font-mono font-bold text-purple-700">${student.tScore}</td>
+                    ${sectionCells}
+                    <td class="py-3 px-4 text-center font-extrabold text-indigo-700 bg-indigo-50/30 text-sm">${cleanTotal}</td>
+                    <td class="py-3 px-4 text-center font-mono font-bold text-purple-700">${cleanTScore}</td>
                     <td class="py-3 px-4 text-center">${statusBadge}</td>
                     <td class="py-3 px-4 text-center">
                         <span class="px-3 py-1 rounded-xl font-extrabold text-sm border ${gradeBadgeColors[student.grade]}">
