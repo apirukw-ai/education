@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบวิเคราะห์ MPL และตัดเกรดนิสิต (Supabase Connected)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- SheetJS for Excel/CSV import/export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; color: #1e293b; }
+        .card-shadow { box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-x-full transition-transform duration-300 ease-in-out max-w-sm bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <div id="toast-message" class="text-xs font-medium">ทำรายการสำเร็จ</div>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-slate-900 text-white sticky top-0 z-40 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition" title="กลับหน้าหลัก">
+                    <i class="fa-solid fa-arrow-left text-lg"></i>
+                </a>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight flex items-center gap-2">
+                        ระบบตัดเกรด & วิเคราะห์ MPL 
+                        <span class="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-lg border border-emerald-500/30">
+                            <i class="fa-solid fa-database mr-1"></i>Supabase Connected
+                        </span>
+                    </h1>
+                    <p class="text-xs text-slate-400">ระบบประเมินผลการเรียนและตัดเกรดอิงเกณฑ์ผสมอิงกลุ่ม (2561-2572)</p>
+                </div>
+            </div>
+
+            <!-- Global Actions -->
+            <div class="flex flex-wrap items-center gap-2.5">
+                <button onclick="generateSampleData()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> ข้อมูลทดลอง
+                </button>
+                <button onclick="document.getElementById('excel-file-input').click()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition shadow-md flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-excel"></i> นำเข้าไฟล์คะแนน
+                </button>
+                <button onclick="saveStudentDataToSupabase()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition shadow-md flex items-center gap-1.5">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> บันทึกสู่ Supabase
+                </button>
+                <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleFileUpload(event)">
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow space-y-8">
+
+        <!-- Controls & Filters Bar -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div class="flex flex-wrap items-center gap-4 w-full lg:w-auto">
+                <!-- Academic Year Selection (2561-2572) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">ปีการศึกษา (พ.ศ.)</label>
+                    <select id="select-academic-year" onchange="loadStudentDataFromSupabase()" class="bg-slate-50 border border-slate-300 text-slate-800 text-sm font-bold rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="2572">2572</option>
+                        <option value="2571">2571</option>
+                        <option value="2570">2570</option>
+                        <option value="2569">2569</option>
+                        <option value="2568" selected>2568</option>
+                        <option value="2567">2567</option>
+                        <option value="2566">2566</option>
+                        <option value="2565">2565</option>
+                        <option value="2564">2564</option>
+                        <option value="2563">2563</option>
+                        <option value="2562">2562</option>
+                        <option value="2561">2561</option>
+                    </select>
+                </div>
+
+                <!-- Course / Term Info -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">ชื่อวิชา / ภาคการศึกษา</label>
+                    <input type="text" id="input-course-name" value="180432 Laws and Ethics in Pharmacy" class="bg-slate-50 border border-slate-300 text-slate-800 text-sm font-semibold rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 w-64">
+                </div>
+
+                <!-- Cohen Multiplier Setting -->
+                <div>
+                    <label class="block text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">ตัวคูณ Modified Cohen</label>
+                    <div class="flex items-center gap-1 bg-indigo-50/60 border border-indigo-200 rounded-xl px-3 py-1.5">
+                        <span class="text-xs font-bold text-indigo-800">0.65 × P90</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="downloadSampleTemplate()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-download text-indigo-600"></i> แบบฟอร์มตัวอย่าง
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Metric Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow">
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">นิสิตทั้งหมด</div>
+                <div id="kpi-total-students" class="text-3xl font-bold text-slate-800 mt-2">0 คน</div>
+                <div class="text-xs text-slate-500 mt-1">ที่บันทึกในระบบ</div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow bg-gradient-to-br from-emerald-50 to-white border-emerald-200">
+                <div class="text-xs font-semibold text-emerald-700 uppercase tracking-wider">สอบผ่านเกณฑ์ (≥ MPL)</div>
+                <div id="kpi-pass-count" class="text-3xl font-bold text-emerald-600 mt-2">0 คน (0%)</div>
+                <div class="text-xs text-emerald-600 mt-1 font-semibold">ได้เกรด D ถึง A</div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow bg-gradient-to-br from-red-50 to-white border-red-200">
+                <div class="text-xs font-semibold text-red-700 uppercase tracking-wider">ตกเกณฑ์ (< MPL)</div>
+                <div id="kpi-fail-count" class="text-3xl font-bold text-red-600 mt-2">0 คน (0%)</div>
+                <div class="text-xs text-red-600 mt-1 font-semibold">ได้เกรด F</div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow">
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">เกณฑ์คะแนนรวม MPL</div>
+                <div id="kpi-mpl-score" class="text-3xl font-extrabold text-indigo-600 mt-2">0.00</div>
+                <div class="text-xs text-slate-500 mt-1" id="kpi-mpl-max">จากคะแนนเต็ม 0</div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 card-shadow">
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">คะแนนเฉลี่ย / สูงสุด</div>
+                <div id="kpi-mean-max" class="text-2xl font-bold text-slate-800 mt-2">0.0 / 0.0</div>
+                <div class="text-xs text-slate-500 mt-1" id="kpi-sd">SD = 0.00</div>
+            </div>
+        </div>
+
+        <!-- Section 2: Modified Cohen MPL Calculation Breakdown per Part -->
+        <div class="bg-white rounded-2xl border border-slate-200 card-shadow overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-indigo-600"></i>
+                        การคำนวณค่า MPL รายส่วน (Section Modified Cohen MPL Breakdown)
+                    </h3>
+                    <p class="text-xs text-slate-500">คำนวณเกณฑ์ผ่านขั้นต่ำของแต่ละส่วนวิชาด้วยวิธี Modified Cohen ($MPL_k = 0.65 \times P_{90}$) แล้วนำมารวมกันเป็น MPL รวม</p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto p-5">
+                <table class="w-full text-left border-collapse rounded-xl overflow-hidden" id="mpl-section-table">
+                    <thead>
+                        <tr class="bg-slate-100 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
+                            <th class="py-3 px-4">ส่วนข้อสอบ (Section / Part)</th>
+                            <th class="py-3 px-4 text-center">คะแนนเต็ม</th>
+                            <th class="py-3 px-4 text-center">คะแนนสูงสุดที่ได้</th>
+                            <th class="py-3 px-4 text-center text-blue-700">ค่า P90 (90th Percentile)</th>
+                            <th class="py-3 px-4 text-center text-indigo-700">สูตรคำนวณ</th>
+                            <th class="py-3 px-4 text-center bg-indigo-50 text-indigo-900 border-l border-indigo-200 font-extrabold">MPL รายส่วน</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mpl-section-tbody" class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                        <tr><td colspan="6" class="text-center py-6 text-slate-400">ยังไม่มีข้อมูล โปรดนำเข้าไฟล์หรือเลือกปีการศึกษาที่มีข้อมูล</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section 3: Grading Method Selector & Parameters -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow space-y-6">
+            <div class="border-b border-slate-100 pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-indigo-600"></i>
+                        เลือกวิธีการตัดเกรดสำหรับกลุ่มนิสิตที่ผ่านเกณฑ์ (คะแนนรวม ≥ MPL)
+                    </h2>
+                    <p class="text-xs text-slate-500">นิสิตที่ได้คะแนนรวม < MPL จะได้รับเกรด F ทันที ส่วนนิสิตที่ผ่านเกณฑ์จะตัดเกรดตามวิธีด้านล่าง</p>
+                </div>
+            </div>
+
+            <!-- 3 Grading Method Tabs -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div onclick="selectGradingMethod('step5')" id="card-method-step5" class="cursor-pointer p-5 rounded-2xl border-2 border-indigo-600 bg-indigo-50/40 transition relative space-y-2 shadow-sm">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-indigo-700 uppercase tracking-wider">[วิธีที่ 1]</span>
+                        <input type="radio" name="grading_method" id="radio-step5" checked class="w-4 h-4 text-indigo-600">
+                    </div>
+                    <div class="font-bold text-slate-800 text-sm">บวกขึ้นไปทีละขั้น ขั้นละ 5%</div>
+                    <p class="text-xs text-slate-500">เริ่มจาก MPL เป็นเกรด D แล้วบวกเพิ่มทีละ 5% ของคะแนนเต็มสำหรับขั้นเกรด D+, C, C+, B, B+, A</p>
+                </div>
+
+                <div onclick="selectGradingMethod('range7')" id="card-method-range7" class="cursor-pointer p-5 rounded-2xl border-2 border-slate-200 hover:border-indigo-300 bg-white transition relative space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">[วิธีที่ 2]</span>
+                        <input type="radio" name="grading_method" id="radio-range7" class="w-4 h-4 text-indigo-600">
+                    </div>
+                    <div class="font-bold text-slate-800 text-sm">แบ่งช่วง (Max - MPL) / 7</div>
+                    <p class="text-xs text-slate-500">คำนวณช่วงคะแนนจาก (คะแนนสูงสุด - MPL) หารด้วย 7 เพื่อแบ่งช่วงเกรด D ถึง A เท่าๆ กัน</p>
+                </div>
+
+                <div onclick="selectGradingMethod('normT')" id="card-method-normT" class="cursor-pointer p-5 rounded-2xl border-2 border-slate-200 hover:border-indigo-300 bg-white transition relative space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">[วิธีที่ 3]</span>
+                        <input type="radio" name="grading_method" id="radio-normT" class="w-4 h-4 text-indigo-600">
+                    </div>
+                    <div class="font-bold text-slate-800 text-sm">ตัดด้วย Norm T-Score</div>
+                    <p class="text-xs text-slate-500">อิงกลุ่มด้วย T-Score ($T = 50 + 10 \times z$) สำหรับผู้ผ่าน กำหนดช่วงเริ่มเกรดขั้นต่ำได้</p>
+                </div>
+            </div>
+
+            <!-- Dynamic Settings Panel for Method 3 -->
+            <div id="normT-settings-panel" class="hidden p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-3">
+                <div class="font-bold text-slate-700 flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-indigo-600"></i> ตัวเลือกเพิ่มเติมสำหรับ Norm T-Score:
+                </div>
+                <div class="flex flex-wrap items-center gap-4">
+                    <div>
+                        <label class="block text-slate-500 mb-1">เริ่มตัดเกรดผ่านที่ขั้นต่ำ:</label>
+                        <select id="select-min-pass-grade" onchange="recalculateGrading()" class="bg-white border border-slate-300 font-bold rounded-lg px-3 py-1.5 text-xs">
+                            <option value="D" selected>เริ่มจากเกรด D</option>
+                            <option value="D+">เริ่มจากเกรด D+</option>
+                            <option value="C">เริ่มจากเกรด C</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-500 mb-1">ช่วงความกว้าง T-Score ต่อเกรด:</label>
+                        <input type="number" id="input-t-step" value="5" min="1" max="10" step="0.5" onchange="recalculateGrading()" class="bg-white border border-slate-300 font-bold rounded-lg px-3 py-1.5 w-20 text-xs text-center">
+                        <span class="text-slate-400 ml-1">(ค่ามาตรฐาน = 5 T-Score)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grade Cutoff Criteria Summary Box -->
+            <div class="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 flex flex-wrap justify-between items-center gap-2 text-xs">
+                <span class="font-bold text-indigo-900 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-info text-indigo-600"></i> เกณฑ์คะแนนตัดเกรดปัจจุบัน:
+                </span>
+                <div id="grade-cutoffs-display" class="flex flex-wrap gap-2 font-mono">
+                    <!-- Dynamic Badges -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4 & 5: Grade Distribution Chart & Summary Table -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow lg:col-span-1 space-y-4">
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-indigo-600"></i>
+                    สัดส่วนเกรด (Grade Distribution %)
+                </h3>
+                <div class="relative w-full h-64">
+                    <canvas id="gradeDistributionChart"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 card-shadow lg:col-span-2 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-list-ol text-indigo-600"></i>
+                        ตารางสรุปจำนวนและเปอร์เซ็นต์นิสิตในแต่ละเกรด
+                    </h3>
+                    <button onclick="exportGradedExcel()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold transition shadow-sm flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-excel"></i> ส่งออกผลเกรด Excel
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse rounded-xl overflow-hidden">
+                        <thead>
+                            <tr class="bg-slate-100 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase">
+                                <th class="py-3 px-4">เกรด (Grade)</th>
+                                <th class="py-3 px-4 text-center">ช่วงคะแนนดิบ / T-Score</th>
+                                <th class="py-3 px-4 text-center">จำนวนนิสิต (คน)</th>
+                                <th class="py-3 px-4 text-center">สัดส่วน (%)</th>
+                                <th class="py-3 px-4 text-left">แถบแสดงสัดส่วน</th>
+                            </tr>
+                        </thead>
+                        <tbody id="grade-summary-tbody" class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Individual Student Results Table -->
+        <div class="bg-white rounded-2xl border border-slate-200 card-shadow overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <i class="fa-solid fa-users-viewfinder text-indigo-600"></i>
+                        ผลการตัดเกรดของนิสิตแต่ละคน (Individual Student Results)
+                    </h3>
+                    <p class="text-xs text-slate-500">แสดงคะแนนรวม, คะแนนแต่ละส่วน, T-Score และเกรดที่ได้</p>
+                </div>
+                
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <div class="relative w-full sm:w-64">
+                        <input type="text" id="student-search-input" onkeyup="filterStudentTable()" placeholder="ค้นหารหัสนิสิต หรือ ชื่อ..." class="w-full text-xs border border-slate-300 rounded-xl px-3 py-2 pl-8 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto max-h-[500px]">
+                <table class="w-full text-left border-collapse" id="student-results-table">
+                    <thead class="sticky top-0 bg-slate-100 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider z-10">
+                        <tr id="student-table-header">
+                            <th class="py-3.5 px-4">ลำดับ</th>
+                            <th class="py-3.5 px-4">รหัสนิสิต</th>
+                            <th class="py-3.5 px-4">ชื่อ - นามสกุล</th>
+                            <th class="py-3.5 px-4 text-center text-indigo-700">คะแนนรวม</th>
+                            <th class="py-3.5 px-4 text-center text-purple-700">T-Score</th>
+                            <th class="py-3.5 px-4 text-center">สถานะ</th>
+                            <th class="py-3.5 px-4 text-center font-extrabold text-slate-800">เกรดที่ได้</th>
+                        </tr>
+                    </thead>
+                    <tbody id="student-results-tbody" class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+                        <tr><td colspan="7" class="text-center py-10 text-slate-400">ยังไม่มีข้อมูลนิสิต กรุณานำเข้าไฟล์คะแนนหรือดึงจาก Supabase</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 space-y-1">
+            <p>© ระบบวิเคราะห์เกณฑ์ Modified Cohen MPL และตัดเกรดอัจฉริยะ (Supabase Connected)</p>
+            <p class="text-slate-400">พัฒนาสำหรับระบบบริหารจัดการข้อมูลการประเมินผลทางการศึกษา (2561-2572)</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Supabase Client Config
+        const SUPABASE_URL = 'https://iproktvvetsbxxmpptuj.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjEwMjg3MTc0MX0.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Global State
+        let rawStudentData = [];     // [{ id, name, sections: {sec1: 10, sec2: 20}, total: 30 }]
+        let sectionMaxScores = {};   // { sec1: 20, sec2: 40, sec3: 40 }
+        let sectionMPLs = {};        // { sec1: 13, sec2: 26, sec3: 26 }
+        let totalMPL = 0;
+        let totalMaxScore = 0;
+        let currentGradingMethod = 'step5'; // 'step5', 'range7', 'normT'
+        let gradeCutoffs = {};       
+        let gradedStudents = [];    
+        let gradeChartInstance = null;
+
+        // Initialize App
+        window.onload = function() {
+            loadStudentDataFromSupabase();
+        };
+
+        // --- SUPABASE INTEGRATION FUNCTIONS ---
+
+        // 1. Fetch Student Grades from Supabase by Selected Year
+        async function loadStudentDataFromSupabase() {
+            const year = document.getElementById('select-academic-year').value;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('mpl_student_grades')
+                    .select('*')
+                    .eq('academic_year', year);
+
+                if (!error && data && data.length > 0) {
+                    // Extract section structure dynamically
+                    sectionMaxScores = {};
+                    rawStudentData = data.map(item => {
+                        const secObj = typeof item.section_scores === 'string' 
+                            ? JSON.parse(item.section_scores) 
+                            : (item.section_scores || {});
+                        
+                        // Infer section max score per section
+                        Object.keys(secObj).forEach(secKey => {
+                            const val = parseFloat(secObj[secKey]) || 0;
+                            if (!sectionMaxScores[secKey] || val > sectionMaxScores[secKey]) {
+                                sectionMaxScores[secKey] = Math.ceil(val);
+                            }
+                        });
+
+                        return {
+                            id: item.student_id,
+                            name: item.student_name,
+                            sections: secObj,
+                            total: parseFloat(item.total_score)
+                        };
+                    });
+
+                    recalculateGrading();
+                    showToast(`โหลดข้อมูลปี ${year} จาก Supabase เรียบร้อยแล้ว (${data.length} คน)`, 'success');
+                } else {
+                    rawStudentData = [];
+                    sectionMaxScores = {};
+                    recalculateGrading();
+                    showToast(`ยังไม่มีข้อมูลปี ${year} ใน Supabase (กดสร้างข้อมูลทดลองหรือนำเข้าไฟล์ได้)`, 'info');
+                }
+            } catch (err) {
+                console.error('Supabase fetch error:', err);
+                showToast('ไม่สามารถเชื่อมต่อ Supabase ได้', 'error');
+            }
+        }
+
+        // 2. Save Current Grades to Supabase
+        async function saveStudentDataToSupabase() {
+            if (gradedStudents.length === 0) {
+                showToast('ไม่มีข้อมูลเกรดที่จะบันทึก', 'error');
+                return;
+            }
+
+            const year = document.getElementById('select-academic-year').value;
+
+            try {
+                // Delete existing data for this academic year first
+                await supabaseClient
+                    .from('mpl_student_grades')
+                    .delete()
+                    .eq('academic_year', year);
+
+                // Prepare batch payload
+                const payload = gradedStudents.map(student => ({
+                    academic_year: year,
+                    student_id: student.id,
+                    student_name: student.name,
+                    section_scores: student.sections,
+                    total_score: student.total,
+                    t_score: student.tScore,
+                    is_pass: student.isPass,
+                    grade: student.grade
+                }));
+
+                const { error } = await supabaseClient
+                    .from('mpl_student_grades')
+                    .insert(payload);
+
+                if (error) {
+                    console.error('Save error:', error);
+                    showToast(`บันทึกสู่ Supabase ไม่สำเร็จ: ${error.message}`, 'error');
+                } else {
+                    showToast(`บันทึกผลเกรดปี ${year} สู่ Supabase (${payload.length} คน) สำเร็จแล้ว!`, 'success');
+                }
+            } catch (err) {
+                console.error('Save error:', err);
+                showToast('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'error');
+            }
+        }
+
+        // --- GRADING & CALCULATION LOGIC ---
+
+        function selectGradingMethod(method) {
+            currentGradingMethod = method;
+            
+            ['step5', 'range7', 'normT'].forEach(m => {
+                const card = document.getElementById(`card-method-${m}`);
+                const radio = document.getElementById(`radio-${m}`);
+                if (m === method) {
+                    card.className = 'cursor-pointer p-5 rounded-2xl border-2 border-indigo-600 bg-indigo-50/40 transition relative space-y-2 shadow-sm';
+                    radio.checked = true;
+                } else {
+                    card.className = 'cursor-pointer p-5 rounded-2xl border-2 border-slate-200 hover:border-indigo-300 bg-white transition relative space-y-2';
+                    radio.checked = false;
+                }
+            });
+
+            const normPanel = document.getElementById('normT-settings-panel');
+            if (method === 'normT') {
+                normPanel.classList.remove('hidden');
+            } else {
+                normPanel.classList.add('hidden');
+            }
+
+            recalculateGrading();
+        }
+
+        function calculatePercentile(arr, p) {
+            if (arr.length === 0) return 0;
+            const sorted = [...arr].sort((a, b) => a - b);
+            const index = (p / 100) * (sorted.length - 1);
+            const lower = Math.floor(index);
+            const upper = Math.ceil(index);
+            const weight = index - lower;
+            return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+        }
+
+        function recalculateGrading() {
+            if (rawStudentData.length === 0) {
+                updateKPIs(0, 0);
+                renderMPLSectionTable();
+                renderGradeCutoffsDisplay();
+                renderGradeSummary();
+                renderStudentResultsTable();
+                return;
+            }
+
+            // 1. Calculate Section MPLs (Modified Cohen: 0.65 * P90)
+            const sectionKeys = Object.keys(sectionMaxScores);
+            sectionMPLs = {};
+            totalMPL = 0;
+            totalMaxScore = 0;
+
+            sectionKeys.forEach(sec => {
+                const scores = rawStudentData.map(s => s.sections[sec] || 0);
+                const p90 = calculatePercentile(scores, 90);
+                const mplSec = parseFloat((0.65 * p90).toFixed(2));
+                sectionMPLs[sec] = mplSec;
+                totalMPL += mplSec;
+                totalMaxScore += sectionMaxScores[sec] || 30;
+            });
+
+            totalMPL = parseFloat(totalMPL.toFixed(2));
+
+            // 2. Render MPL Section Breakdown Table
+            renderMPLSectionTable();
+
+            // 3. Compute Passers & T-Scores
+            const maxObservedScore = Math.max(...rawStudentData.map(s => s.total));
+            const passStudents = rawStudentData.filter(s => s.total >= totalMPL);
+            const passScores = passStudents.map(s => s.total);
+            const passMean = passScores.length > 0 ? (passScores.reduce((a, b) => a + b, 0) / passScores.length) : 0;
+            const passVariance = passScores.length > 1 
+                ? (passScores.reduce((a, b) => a + Math.pow(b - passMean, 2), 0) / (passScores.length - 1)) 
+                : 1;
+            const passSD = Math.sqrt(passVariance) || 1;
+
+            // 4. Calculate Grade Boundaries
+            gradeCutoffs = calculateGradeCutoffs(totalMPL, maxObservedScore, totalMaxScore, passMean, passSD);
+
+            // 5. Assign Grades to Students
+            gradedStudents = rawStudentData.map(student => {
+                const isPass = student.total >= totalMPL;
+                const zScore = (student.total - passMean) / passSD;
+                const tScore = parseFloat((50 + (10 * zScore)).toFixed(2));
+
+                let assignedGrade = 'F';
+                if (!isPass) {
+                    assignedGrade = 'F';
+                } else {
+                    assignedGrade = evaluateGrade(student.total, tScore, gradeCutoffs);
+                }
+
+                return {
+                    ...student,
+                    tScore: tScore,
+                    isPass: isPass,
+                    grade: assignedGrade
+                };
+            });
+
+            // 6. Update UI Components
+            updateKPIs(passStudents.length, rawStudentData.length - passStudents.length);
+            renderGradeCutoffsDisplay();
+            renderGradeSummary();
+            renderStudentResultsTable();
+        }
+
+        function calculateGradeCutoffs(mpl, maxObserved, maxFull, passMean, passSD) {
+            const cutoffs = {};
+
+            if (currentGradingMethod === 'step5') {
+                const step = 0.05 * maxFull;
+                cutoffs['D']  = parseFloat(mpl.toFixed(2));
+                cutoffs['D+'] = parseFloat((mpl + step * 1).toFixed(2));
+                cutoffs['C']  = parseFloat((mpl + step * 2).toFixed(2));
+                cutoffs['C+'] = parseFloat((mpl + step * 3).toFixed(2));
+                cutoffs['B']  = parseFloat((mpl + step * 4).toFixed(2));
+                cutoffs['B+'] = parseFloat((mpl + step * 5).toFixed(2));
+                cutoffs['A']  = parseFloat((mpl + step * 6).toFixed(2));
+            } 
+            else if (currentGradingMethod === 'range7') {
+                const range = Math.max(0.1, maxObserved - mpl);
+                const interval = range / 7;
+                cutoffs['D']  = parseFloat(mpl.toFixed(2));
+                cutoffs['D+'] = parseFloat((mpl + interval * 1).toFixed(2));
+                cutoffs['C']  = parseFloat((mpl + interval * 2).toFixed(2));
+                cutoffs['C+'] = parseFloat((mpl + interval * 3).toFixed(2));
+                cutoffs['B']  = parseFloat((mpl + interval * 4).toFixed(2));
+                cutoffs['B+'] = parseFloat((mpl + interval * 5).toFixed(2));
+                cutoffs['A']  = parseFloat((mpl + interval * 6).toFixed(2));
+            } 
+            else if (currentGradingMethod === 'normT') {
+                const minGrade = document.getElementById('select-min-pass-grade').value || 'D';
+                const tStep = parseFloat(document.getElementById('input-t-step').value || 5);
+                
+                cutoffs['T_MODE'] = true;
+                cutoffs['MIN_GRADE'] = minGrade;
+                cutoffs['D']  = 35;
+                cutoffs['D+'] = 40;
+                cutoffs['C']  = 45;
+                cutoffs['C+'] = 50;
+                cutoffs['B']  = 55;
+                cutoffs['B+'] = 60;
+                cutoffs['A']  = 65;
+            }
+
+            return cutoffs;
+        }
+
+        function evaluateGrade(score, tScore, cutoffs) {
+            if (currentGradingMethod === 'normT') {
+                if (tScore >= cutoffs['A']) return 'A';
+                if (tScore >= cutoffs['B+']) return 'B+';
+                if (tScore >= cutoffs['B']) return 'B';
+                if (tScore >= cutoffs['C+']) return 'C+';
+                if (tScore >= cutoffs['C']) return 'C';
+                if (tScore >= cutoffs['D+']) return 'D+';
+                return 'D';
+            } else {
+                if (score >= cutoffs['A']) return 'A';
+                if (score >= cutoffs['B+']) return 'B+';
+                if (score >= cutoffs['B']) return 'B';
+                if (score >= cutoffs['C+']) return 'C+';
+                if (score >= cutoffs['C']) return 'C';
+                if (score >= cutoffs['D+']) return 'D+';
+                if (score >= cutoffs['D']) return 'D';
+                return 'F';
+            }
+        }
+
+        function renderMPLSectionTable() {
+            const tbody = document.getElementById('mpl-section-tbody');
+            tbody.innerHTML = '';
+
+            const sectionKeys = Object.keys(sectionMaxScores);
+            if (sectionKeys.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">ยังไม่มีข้อมูลส่วนวิชา</td></tr>`;
+                return;
+            }
+
+            sectionKeys.forEach((sec) => {
+                const scores = rawStudentData.map(s => s.sections[sec] || 0);
+                const maxScoreObs = scores.length > 0 ? Math.max(...scores) : 0;
+                const p90 = calculatePercentile(scores, 90).toFixed(2);
+                const mplSec = sectionMPLs[sec] || 0;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-bold text-slate-800">
+                        <i class="fa-solid fa-folder text-indigo-500 mr-2"></i> ${sec}
+                    </td>
+                    <td class="py-3 px-4 text-center font-semibold text-slate-600">${sectionMaxScores[sec]} คะแนน</td>
+                    <td class="py-3 px-4 text-center text-slate-700">${maxScoreObs} คะแนน</td>
+                    <td class="py-3 px-4 text-center font-bold text-blue-600">${p90}</td>
+                    <td class="py-3 px-4 text-center text-slate-500 font-mono">0.65 × ${p90}</td>
+                    <td class="py-3 px-4 text-center font-extrabold text-indigo-700 bg-indigo-50/50 border-l border-indigo-100 text-sm">
+                        ${mplSec.toFixed(2)} คะแนน
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const trTotal = document.createElement('tr');
+            trTotal.className = 'bg-slate-100 font-bold border-t-2 border-slate-200';
+            const maxTotalObs = rawStudentData.length > 0 ? Math.max(...rawStudentData.map(s=>s.total)) : 0;
+            trTotal.innerHTML = `
+                <td class="py-3 px-4 text-slate-900 font-bold">รวมทุกส่วน (Total Combined)</td>
+                <td class="py-3 px-4 text-center text-slate-800">${totalMaxScore} คะแนน</td>
+                <td class="py-3 px-4 text-center text-slate-800">${maxTotalObs} คะแนน</td>
+                <td class="py-3 px-4 text-center text-slate-400">-</td>
+                <td class="py-3 px-4 text-center text-slate-500 font-mono">Σ (MPL 各 section)</td>
+                <td class="py-3 px-4 text-center font-black text-indigo-900 bg-indigo-100 border-l border-indigo-200 text-base">
+                    ${totalMPL.toFixed(2)} คะแนน
+                </td>
+            `;
+            tbody.appendChild(trTotal);
+        }
+
+        function renderGradeCutoffsDisplay() {
+            const container = document.getElementById('grade-cutoffs-display');
+            container.innerHTML = '';
+
+            const grades = ['F', 'D', 'D+', 'C', 'C+', 'B', 'B+', 'A'];
+            const colors = {
+                'F': 'bg-red-100 text-red-700 border-red-300',
+                'D': 'bg-amber-100 text-amber-800 border-amber-300',
+                'D+': 'bg-amber-50 text-amber-700 border-amber-200',
+                'C': 'bg-blue-50 text-blue-700 border-blue-200',
+                'C+': 'bg-blue-100 text-blue-800 border-blue-300',
+                'B': 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                'B+': 'bg-indigo-100 text-indigo-800 border-indigo-300',
+                'A': 'bg-emerald-100 text-emerald-800 border-emerald-300'
+            };
+
+            grades.forEach(g => {
+                let text = '';
+                if (g === 'F') {
+                    text = `< ${totalMPL}`;
+                } else if (currentGradingMethod === 'normT') {
+                    text = `T ≥ ${gradeCutoffs[g]}`;
+                } else {
+                    text = `≥ ${gradeCutoffs[g]}`;
+                }
+
+                const span = document.createElement('span');
+                span.className = `px-2.5 py-1 rounded-lg text-xs font-bold border ${colors[g]}`;
+                span.innerHTML = `${g}: ${text}`;
+                container.appendChild(span);
+            });
+        }
+
+        function updateKPIs(passCount, failCount) {
+            const total = rawStudentData.length;
+            const passPct = total > 0 ? ((passCount / total) * 100).toFixed(1) : 0;
+            const failPct = total > 0 ? ((failCount / total) * 100).toFixed(1) : 0;
+
+            document.getElementById('kpi-total-students').innerText = `${total} คน`;
+            document.getElementById('kpi-pass-count').innerText = `${passCount} คน (${passPct}%)`;
+            document.getElementById('kpi-fail-count').innerText = `${failCount} คน (${failPct}%)`;
+            document.getElementById('kpi-mpl-score').innerText = totalMPL.toFixed(2);
+            document.getElementById('kpi-mpl-max').innerText = `จากคะแนนเต็ม ${totalMaxScore}`;
+
+            const scores = rawStudentData.map(s => s.total);
+            const mean = scores.length > 0 ? (scores.reduce((a,b)=>a+b,0)/total).toFixed(1) : 0;
+            const max = scores.length > 0 ? Math.max(...scores) : 0;
+
+            const variance = scores.length > 1 ? (scores.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (total - 1)) : 0;
+            const sd = Math.sqrt(variance).toFixed(2);
+
+            document.getElementById('kpi-mean-max').innerText = `${mean} / ${max}`;
+            document.getElementById('kpi-sd').innerText = `ส่วนเบี่ยงเบนมาตรฐาน SD = ${sd}`;
+        }
+
+        function renderGradeSummary() {
+            const tbody = document.getElementById('grade-summary-tbody');
+            tbody.innerHTML = '';
+
+            const grades = ['F', 'D', 'D+', 'C', 'C+', 'B', 'B+', 'A'];
+            const total = gradedStudents.length;
+
+            const gradeCounts = {};
+            grades.forEach(g => gradeCounts[g] = 0);
+            gradedStudents.forEach(s => gradeCounts[s.grade]++);
+
+            const chartLabels = [];
+            const chartData = [];
+            const chartColors = ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#10b981', '#06b6d4', '#6366f1'];
+
+            grades.forEach((g, idx) => {
+                const count = gradeCounts[g];
+                const pct = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+
+                chartLabels.push(g);
+                chartData.push(count);
+
+                let rangeText = '';
+                if (g === 'F') rangeText = `< ${totalMPL} คะแนน`;
+                else if (currentGradingMethod === 'normT') rangeText = `T-Score ≥ ${gradeCutoffs[g]}`;
+                else rangeText = `≥ ${gradeCutoffs[g]} คะแนน`;
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-bold text-slate-800">
+                        <span class="inline-block w-3 h-3 rounded-full mr-2" style="background-color: ${chartColors[idx]}"></span>
+                        เกรด ${g}
+                    </td>
+                    <td class="py-3 px-4 text-center font-mono text-slate-500 text-xs">${rangeText}</td>
+                    <td class="py-3 px-4 text-center font-bold text-slate-800 text-sm">${count} คน</td>
+                    <td class="py-3 px-4 text-center font-bold text-indigo-700 text-sm">${pct}%</td>
+                    <td class="py-3 px-4 text-left">
+                        <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                            <div class="h-2.5 rounded-full" style="width: ${pct}%; background-color: ${chartColors[idx]}"></div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            renderGradeChart(chartLabels, chartData, chartColors);
+        }
+
+        function renderGradeChart(labels, data, colors) {
+            const ctx = document.getElementById('gradeDistributionChart').getContext('2d');
+            if (gradeChartInstance) gradeChartInstance.destroy();
+
+            gradeChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'จำนวนนิสิต (คน)',
+                        data: data,
+                        backgroundColor: colors,
+                        borderRadius: 6,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = gradedStudents.length;
+                                    const pct = total > 0 ? ((context.raw / total) * 100).toFixed(1) : 0;
+                                    return `จำนวน: ${context.raw} คน (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderStudentResultsTable() {
+            const headerRow = document.getElementById('student-table-header');
+            const tbody = document.getElementById('student-results-tbody');
+            tbody.innerHTML = '';
+
+            const sectionKeys = Object.keys(sectionMaxScores);
+
+            headerRow.innerHTML = `
+                <th class="py-3.5 px-4">ลำดับ</th>
+                <th class="py-3.5 px-4">รหัสนิสิต</th>
+                <th class="py-3.5 px-4">ชื่อ - นามสกุล</th>
+                ${sectionKeys.map(s => `<th class="py-3.5 px-4 text-center text-slate-600">${s} (เต็ม ${sectionMaxScores[s]})</th>`).join('')}
+                <th class="py-3.5 px-4 text-center text-indigo-700 bg-indigo-50/50">คะแนนรวม (${totalMaxScore})</th>
+                <th class="py-3.5 px-4 text-center text-purple-700">T-Score</th>
+                <th class="py-3.5 px-4 text-center">สถานะ</th>
+                <th class="py-3.5 px-4 text-center font-extrabold text-slate-800">เกรดที่ได้</th>
+            `;
+
+            if (gradedStudents.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="${7 + sectionKeys.length}" class="text-center py-10 text-slate-400">ยังไม่มีข้อมูลนิสิตในระบบสำหรับปีการศึกษานี้</td></tr>`;
+                return;
+            }
+
+            gradedStudents.forEach((student, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+
+                const gradeBadgeColors = {
+                    'F': 'bg-red-100 text-red-700 border-red-300',
+                    'D': 'bg-amber-100 text-amber-800 border-amber-300',
+                    'D+': 'bg-amber-50 text-amber-700 border-amber-200',
+                    'C': 'bg-blue-50 text-blue-700 border-blue-200',
+                    'C+': 'bg-blue-100 text-blue-800 border-blue-300',
+                    'B': 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                    'B+': 'bg-indigo-100 text-indigo-800 border-indigo-300',
+                    'A': 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                };
+
+                const statusBadge = student.isPass
+                    ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">ผ่านเกณฑ์</span>`
+                    : `<span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-red-50 text-red-700 border border-red-200">ตกเกณฑ์</span>`;
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-slate-400 font-mono">${index + 1}</td>
+                    <td class="py-3 px-4 font-mono font-bold text-slate-800">${student.id}</td>
+                    <td class="py-3 px-4 font-semibold text-slate-700">${student.name}</td>
+                    ${sectionKeys.map(s => `<td class="py-3 px-4 text-center text-slate-600">${student.sections[s] || 0}</td>`).join('')}
+                    <td class="py-3 px-4 text-center font-extrabold text-indigo-700 bg-indigo-50/30 text-sm">${student.total}</td>
+                    <td class="py-3 px-4 text-center font-mono font-bold text-purple-700">${student.tScore}</td>
+                    <td class="py-3 px-4 text-center">${statusBadge}</td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="px-3 py-1 rounded-xl font-extrabold text-sm border ${gradeBadgeColors[student.grade]}">
+                            ${student.grade}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterStudentTable() {
+            const query = document.getElementById('student-search-input').value.toLowerCase();
+            const rows = document.querySelectorAll('#student-results-tbody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        // --- EXCEL & CSV FILE PARSER ---
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, { defval: "" });
+
+                parseUploadedStudentData(jsonData);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function parseUploadedStudentData(jsonData) {
+            if (jsonData.length === 0) {
+                showToast('ไม่พบข้อมูลในไฟล์ที่อัปโหลด', 'error');
+                return;
+            }
+
+            const sampleRow = jsonData[0];
+            const keys = Object.keys(sampleRow);
+
+            const idKey = keys.find(k => k.match(/รหัส|student_id|id|code/i)) || keys[0];
+            const nameKey = keys.find(k => k.match(/ชื่อ|name|fullname/i)) || keys[1];
+
+            const secKeys = keys.filter(k => k !== idKey && k !== nameKey && !k.match(/รวม|total|grade|เกรด|t-score|status|สถานะ/i));
+
+            if (secKeys.length === 0) {
+                showToast('ไม่พบคอลัมน์คะแนนสอบรายส่วน (Section)', 'error');
+                return;
+            }
+
+            sectionMaxScores = {};
+            secKeys.forEach(sec => {
+                const scores = jsonData.map(r => parseFloat(r[sec]) || 0);
+                const maxVal = Math.max(...scores);
+                sectionMaxScores[sec] = maxVal > 0 ? Math.ceil(maxVal) : 30;
+            });
+
+            rawStudentData = jsonData.map((row, idx) => {
+                const studentId = String(row[idKey] || (68051000 + idx + 1)).trim();
+                const studentName = String(row[nameKey] || `นิสิตคนที่ ${idx + 1}`).trim();
+                
+                const sections = {};
+                let total = 0;
+                secKeys.forEach(sec => {
+                    const val = parseFloat(row[sec]) || 0;
+                    sections[sec] = val;
+                    total += val;
+                });
+
+                return {
+                    id: studentId,
+                    name: studentName,
+                    sections: sections,
+                    total: parseFloat(total.toFixed(2))
+                };
+            });
+
+            recalculateGrading();
+            showToast(`นำเข้าข้อมูลนิสิตเรียบร้อย ${rawStudentData.length} คน (กดปุ่ม "บันทึกสู่ Supabase" เพื่อเก็บลงฐานข้อมูล)`, 'success');
+        }
+
+        // --- SAMPLE DEMO GENERATOR ---
+        function generateSampleData() {
+            sectionMaxScores = {
+                'ตอนที่ 1 (กติกาและกฎหมาย)': 30,
+                'ตอนที่ 2 (จริยธรรมเภสัชกรรม)': 40,
+                'ตอนที่ 3 (กรณีศึกษาเวชปฏิบัติ)': 30
+            };
+
+            const sampleNames = [
+                'สมชาย ใจดี', 'นิภา รัตนวงษ์', 'กิตติศักดิ์ ศรีสุข', 'ชลธิชา มีทรัพย์', 'ปิยะณัฐ วงศ์สว่าง',
+                'อารียา สุขสันต์', 'ธนพล บุญมา', 'ศิริพร เจริญสุข', 'ณัฐวุฒิ กล้าหาญ', 'วรรณวิสา เลิศอนันต์',
+                'กฤษฎา บุญส่ง', 'กัญญารัตน์ มั่นคง', 'ภานุวัฒน์ คงเจริญ', 'พิมนารา วงศ์ไทย', 'สิริวิมล จิตต์เที่ยง',
+                'ชัยวัฒน์ สมบูรณ์', 'ธนกฤต แสงทอง', 'นภัสสร อุดมทรัพย์', 'ปัณณธร พงษ์สวัสดิ์', 'ศุภกร ยิ่งยง'
+            ];
+
+            rawStudentData = sampleNames.map((name, idx) => {
+                const id = `6805100${(idx + 1).toString().padStart(2, '0')}`;
+                
+                const sec1 = parseFloat((Math.min(30, Math.max(8, 18 + (Math.random() * 12 - 4)))).toFixed(1));
+                const sec2 = parseFloat((Math.min(40, Math.max(12, 26 + (Math.random() * 14 - 5)))).toFixed(1));
+                const sec3 = parseFloat((Math.min(30, Math.max(10, 20 + (Math.random() * 10 - 3)))).toFixed(1));
+                const total = parseFloat((sec1 + sec2 + sec3).toFixed(1));
+
+                return {
+                    id: id,
+                    name: name,
+                    sections: {
+                        'ตอนที่ 1 (กติกาและกฎหมาย)': sec1,
+                        'ตอนที่ 2 (จริยธรรมเภสัชกรรม)': sec2,
+                        'ตอนที่ 3 (กรณีศึกษาเวชปฏิบัติ)': sec3
+                    },
+                    total: total
+                };
+            });
+
+            recalculateGrading();
+            showToast('สร้างข้อมูลตัวอย่างสำหรับทดลองเรียบร้อย', 'info');
+        }
+
+        function downloadSampleTemplate() {
+            const data = [
+                { "รหัสนิสิต": "680510001", "ชื่อ-นามสกุล": "สมชาย ใจดี", "ตอนที่ 1": 22.5, "ตอนที่ 2": 31.0, "ตอนที่ 3": 24.0 },
+                { "รหัสนิสิต": "680510002", "ชื่อ-นามสกุล": "นิภา รัตนวงษ์", "ตอนที่ 1": 18.0, "ตอนที่ 2": 25.5, "ตอนที่ 3": 19.5 }
+            ];
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "คะแนนนิสิต");
+            XLSX.writeFile(wb, "แบบฟอร์มคะแนนดิบนิสิต_ตัวอย่าง.xlsx");
+        }
+
+        function exportGradedExcel() {
+            if (gradedStudents.length === 0) return;
+
+            const year = document.getElementById('select-academic-year').value;
+            const exportData = gradedStudents.map((s, idx) => {
+                const row = {
+                    "ลำดับ": idx + 1,
+                    "ปีการศึกษา": year,
+                    "รหัสนิสิต": s.id,
+                    "ชื่อ-นามสกุล": s.name,
+                };
+
+                Object.keys(sectionMaxScores).forEach(sec => {
+                    row[sec] = s.sections[sec] || 0;
+                });
+
+                row["คะแนนรวม"] = s.total;
+                row["T-Score"] = s.tScore;
+                row["เกณฑ์ผ่าน (MPL รวม)"] = totalMPL;
+                row["สถานะ"] = s.isPass ? "ผ่าน" : "ตก";
+                row["เกรด"] = s.grade;
+
+                return row;
+            });
+
+            const ws = XLSX.utils.json_to_sheet(exportData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "ผลการตัดเกรด");
+            XLSX.writeFile(wb, `รายงานผลการตัดเกรด_ปี${year}_Modified_Cohen.xlsx`);
+        }
+
+        // Toast Helper
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const msg = document.getElementById('toast-message');
+
+            msg.innerText = message;
+            if (type === 'success') {
+                icon.className = 'fa-solid fa-circle-check text-emerald-400 text-lg';
+            } else if (type === 'error') {
+                icon.className = 'fa-solid fa-circle-exclamation text-red-400 text-lg';
+            } else {
+                icon.className = 'fa-solid fa-circle-info text-blue-400 text-lg';
+            }
+
+            toast.classList.remove('translate-x-full');
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
