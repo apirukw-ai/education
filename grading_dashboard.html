@@ -216,25 +216,37 @@
                 </div>
             </div>
 
-            <!-- Dynamic Settings Panel for Method 3 -->
+            <!-- Dynamic Settings Panel for Method 3 (Norm T-Score) -->
             <div id="normT-settings-panel" class="hidden p-4 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-3">
                 <div class="font-bold text-slate-700 flex items-center gap-2">
-                    <i class="fa-solid fa-gear text-indigo-600"></i> ตัวเลือกเพิ่มเติมสำหรับ Norm T-Score:
+                    <i class="fa-solid fa-gear text-indigo-600"></i> ตัวเลือกการตัดเกรด Norm T-Score (อิงกลุ่มสำหรับผู้ผ่านเกณฑ์):
                 </div>
                 <div class="flex flex-wrap items-center gap-4">
                     <div>
-                        <label class="block text-slate-500 mb-1">เริ่มตัดเกรดผ่านที่ขั้นต่ำ:</label>
-                        <select id="select-min-pass-grade" onchange="recalculateGrading()" class="bg-white border border-slate-300 font-bold rounded-lg px-3 py-1.5 text-xs">
-                            <option value="D" selected>เริ่มจากเกรด D</option>
-                            <option value="D+">เริ่มจากเกรด D+</option>
-                            <option value="C">เริ่มจากเกรด C</option>
+                        <label class="block text-slate-500 mb-1 font-semibold">เริ่มตัดจากเกรดสูงสุด:</label>
+                        <select id="select-norm-top-grade" onchange="recalculateGrading()" class="bg-white border border-slate-300 font-bold rounded-lg px-3 py-1.5 text-xs text-indigo-700">
+                            <option value="A" selected>เกรด A</option>
+                            <option value="B+">เกรด B+</option>
+                            <option value="B">เกรด B</option>
+                            <option value="C+">เกรด C+</option>
+                            <option value="C">เกรด C</option>
+                            <option value="D+">เกรด D+</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-slate-500 mb-1">ช่วงความกว้าง T-Score ต่อเกรด:</label>
-                        <input type="number" id="input-t-step" value="5" min="1" max="10" step="0.5" onchange="recalculateGrading()" class="bg-white border border-slate-300 font-bold rounded-lg px-3 py-1.5 w-20 text-xs text-center">
-                        <span class="text-slate-400 ml-1">(ค่ามาตรฐาน = 5 T-Score)</span>
+                        <label class="block text-slate-500 mb-1 font-semibold">ถึงเกรดต่ำสุด (สำหรับผู้ผ่าน):</label>
+                        <select id="select-norm-low-grade" onchange="recalculateGrading()" class="bg-white border border-slate-300 font-bold rounded-lg px-3 py-1.5 text-xs text-indigo-700">
+                            <option value="D" selected>เกรด D</option>
+                            <option value="D+">เกรด D+</option>
+                            <option value="C">เกรด C</option>
+                            <option value="C+">เกรด C+</option>
+                            <option value="B">เกรด B</option>
+                            <option value="B+">เกรด B+</option>
+                        </select>
                     </div>
+                </div>
+                <div id="normT-info-box" class="text-[11px] text-slate-600 bg-white p-2.5 rounded-lg border border-slate-200 font-mono">
+                    <!-- แสดงสรุปการคำนวณ Tmax, Tmin, N และ Delta T แบบ Real-time -->
                 </div>
             </div>
 
@@ -493,6 +505,23 @@
             return sorted[lower] * (1 - weight) + sorted[upper] * weight;
         }
 
+        const ALL_GRADES_ORDER = ['A', 'B+', 'B', 'C+', 'C', 'D+', 'D'];
+
+        // ดึงรายการเกรดที่เปิดใช้งานตามช่วงที่ผู้ใช้เลือก (เช่น A ถึง C+)
+        function getActiveNormGrades() {
+            const topG = document.getElementById('select-norm-top-grade')?.value || 'A';
+            const lowG = document.getElementById('select-norm-low-grade')?.value || 'D';
+
+            const topIdx = ALL_GRADES_ORDER.indexOf(topG);
+            const lowIdx = ALL_GRADES_ORDER.indexOf(lowG);
+
+            if (topIdx > lowIdx) {
+                return ALL_GRADES_ORDER.slice(topIdx, topIdx + 1);
+            }
+            return ALL_GRADES_ORDER.slice(topIdx, lowIdx + 1);
+        }
+
+        // 1. ฟังก์ชันคำนวณเกรดรวม
         function recalculateGrading() {
             if (rawStudentData.length === 0) {
                 updateKPIs(0, 0);
@@ -503,7 +532,6 @@
                 return;
             }
 
-            // 1. Calculate Section MPLs (Modified Cohen: 0.65 * P90)
             const sectionKeys = Object.keys(sectionMaxScores);
             sectionMPLs = {};
             totalMPL = 0;
@@ -520,10 +548,8 @@
 
             totalMPL = parseFloat(totalMPL.toFixed(2));
 
-            // 2. Render MPL Section Breakdown Table
             renderMPLSectionTable();
 
-            // 3. Compute Passers & T-Scores
             const maxObservedScore = Math.max(...rawStudentData.map(s => s.total));
             const passStudents = rawStudentData.filter(s => s.total >= totalMPL);
             const passScores = passStudents.map(s => s.total);
@@ -533,14 +559,13 @@
                 : 1;
             const passSD = Math.sqrt(passVariance) || 1;
 
-            // 4. Calculate Grade Boundaries
-            gradeCutoffs = calculateGradeCutoffs(totalMPL, maxObservedScore, totalMaxScore, passMean, passSD);
+            // ส่ง passStudents เข้าคำนวณ Tmax, Tmin
+            gradeCutoffs = calculateGradeCutoffs(totalMPL, maxObservedScore, totalMaxScore, passMean, passSD, passStudents);
 
-            // 5. Assign Grades to Students
             gradedStudents = rawStudentData.map(student => {
                 const isPass = student.total >= totalMPL;
                 const zScore = (student.total - passMean) / passSD;
-                const tScore = parseFloat((50 + (10 * zScore)).toFixed(2));
+                const tScore = truncate2Decimals(50 + (10 * zScore));
 
                 let assignedGrade = 'F';
                 if (!isPass) {
@@ -557,14 +582,14 @@
                 };
             });
 
-            // 6. Update UI Components
             updateKPIs(passStudents.length, rawStudentData.length - passStudents.length);
             renderGradeCutoffsDisplay();
             renderGradeSummary();
             renderStudentResultsTable();
         }
 
-        function calculateGradeCutoffs(mpl, maxObserved, maxFull, passMean, passSD) {
+        // 2. ฟังก์ชันคำนวณช่วงคะแนนตัดเกรด (รองรับ Norm T เลขคู่ / เลขคี่)
+        function calculateGradeCutoffs(mpl, maxObserved, maxFull, passMean, passSD, passStudents = []) {
             const cutoffs = {};
 
             if (currentGradingMethod === 'step5') {
@@ -589,32 +614,79 @@
                 cutoffs['A']  = parseFloat((mpl + interval * 6).toFixed(2));
             } 
             else if (currentGradingMethod === 'normT') {
-                const minGrade = document.getElementById('select-min-pass-grade').value || 'D';
-                const tStep = parseFloat(document.getElementById('input-t-step').value || 5);
+                const activeGradesHighToLow = getActiveNormGrades();
+                const activeGradesLowToHigh = [...activeGradesHighToLow].reverse();
+                const N = activeGradesLowToHigh.length;
+
+                let tScores = passStudents.map(s => (50 + 10 * ((s.total - passMean) / passSD)));
+                if (tScores.length === 0) tScores = [50];
                 
-                cutoffs['T_MODE'] = true;
-                cutoffs['MIN_GRADE'] = minGrade;
-                cutoffs['D']  = 35;
-                cutoffs['D+'] = 40;
-                cutoffs['C']  = 45;
-                cutoffs['C+'] = 50;
-                cutoffs['B']  = 55;
-                cutoffs['B+'] = 60;
-                cutoffs['A']  = 65;
+                const tMax = Math.max(...tScores);
+                const tMin = Math.min(...tScores);
+                const deltaT = N > 0 ? (tMax - tMin) / N : 0;
+
+                cutoffs['normT_details'] = {
+                    activeGrades: activeGradesHighToLow,
+                    N: N,
+                    tMax: tMax,
+                    tMin: tMin,
+                    deltaT: deltaT
+                };
+
+                const gradeCutoffT = {};
+
+                if (N % 2 === 0) {
+                    // กรณี N เป็นเลขคู่
+                    const midIndex = N / 2;
+                    for (let k = 1; k < N; k++) {
+                        const gradeName = activeGradesLowToHigh[k];
+                        const tCut = 50 + (k - midIndex) * deltaT;
+                        gradeCutoffT[gradeName] = parseFloat(tCut.toFixed(2));
+                    }
+                } else {
+                    // กรณี N เป็นเลขคี่
+                    const midIndex = (N - 1) / 2;
+                    for (let k = 1; k < N; k++) {
+                        const gradeName = activeGradesLowToHigh[k];
+                        const tCut = 50 + (k - midIndex - 0.5) * deltaT;
+                        gradeCutoffT[gradeName] = parseFloat(tCut.toFixed(2));
+                    }
+                }
+
+                cutoffs['normT_cutoffs'] = gradeCutoffT;
+
+                const infoBox = document.getElementById('normT-info-box');
+                if (infoBox) {
+                    const centerGradeName = N % 2 === 0 
+                        ? `เกรด ${activeGradesLowToHigh[N/2]} (จุดเริ่ม T50)` 
+                        : `กึ่งกลางเกรด ${activeGradesLowToHigh[(N-1)/2]} (T50 ± ΔT/2)`;
+                    infoBox.innerHTML = `
+                        <b>จำนวนเกรดที่ตัด (N):</b> ${N} เกรด (${activeGradesHighToLow.join(', ')}) | <b>รูปแบบ:</b> ${N % 2 === 0 ? 'เลขคู่' : 'เลขคี่'} [${centerGradeName}]<br>
+                        <b>T<sub>max</sub>:</b> ${tMax.toFixed(2)} | <b>T<sub>min</sub>:</b> ${tMin.toFixed(2)} | <b>ช่วงคะแนน (ΔT):</b> (${tMax.toFixed(2)} - ${tMin.toFixed(2)}) / ${N} = <b>${deltaT.toFixed(2)} T-Score</b>
+                    `;
+                }
             }
 
             return cutoffs;
         }
 
+        // 3. ฟังก์ชันประเมินเกรดนิสิตรายบุคคล
         function evaluateGrade(score, tScore, cutoffs) {
             if (currentGradingMethod === 'normT') {
-                if (tScore >= cutoffs['A']) return 'A';
-                if (tScore >= cutoffs['B+']) return 'B+';
-                if (tScore >= cutoffs['B']) return 'B';
-                if (tScore >= cutoffs['C+']) return 'C+';
-                if (tScore >= cutoffs['C']) return 'C';
-                if (tScore >= cutoffs['D+']) return 'D+';
-                return 'D';
+                const details = cutoffs['normT_details'];
+                if (!details || !details.activeGrades) return 'D';
+
+                const activeGradesLowToHigh = [...details.activeGrades].reverse();
+                const gradeCutoffT = cutoffs['normT_cutoffs'] || {};
+
+                for (let k = activeGradesLowToHigh.length - 1; k >= 1; k--) {
+                    const gradeName = activeGradesLowToHigh[k];
+                    const minT = gradeCutoffT[gradeName];
+                    if (tScore >= minT) {
+                        return gradeName;
+                    }
+                }
+                return activeGradesLowToHigh[0];
             } else {
                 if (score >= cutoffs['A']) return 'A';
                 if (score >= cutoffs['B+']) return 'B+';
