@@ -911,12 +911,21 @@
             }
 
             const sampleRow = jsonData[0];
-            const keys = Object.keys(sampleRow);
+            // กรองคอลัมน์ว่าง (__EMPTY) ออก
+            const keys = Object.keys(sampleRow).filter(k => k && !k.startsWith('__EMPTY'));
 
+            // ค้นหาคอลัมน์ รหัสนิสิต
             const idKey = keys.find(k => k.match(/รหัส|student_id|id|code/i)) || keys[0];
-            const nameKey = keys.find(k => k.match(/ชื่อ|name|fullname/i)) || keys[1];
 
-            const secKeys = keys.filter(k => k !== idKey && k !== nameKey && !k.match(/รวม|total|grade|เกรด|t-score|status|สถานะ/i));
+            // ค้นหาคอลัมน์ ชื่อ-นามสกุล (ถ้าไม่มี จะไม่ดึงคอลัมน์คะแนนมามั่ว)
+            const nameKey = keys.find(k => k.match(/ชื่อ|name|fullname/i));
+
+            // คอลัมน์คะแนนทั้งหมด (ยกเว้นรหัส ชื่อ และคำสรุป)
+            const secKeys = keys.filter(k => 
+                k !== idKey && 
+                k !== nameKey && 
+                !k.match(/รวม|total|grade|เกรด|t-score|status|สถานะ/i)
+            );
 
             if (secKeys.length === 0) {
                 showToast('ไม่พบคอลัมน์คะแนนสอบรายส่วน (Section)', 'error');
@@ -932,7 +941,8 @@
 
             rawStudentData = jsonData.map((row, idx) => {
                 const studentId = String(row[idKey] || (68051000 + idx + 1)).trim();
-                const studentName = String(row[nameKey] || `นิสิตคนที่ ${idx + 1}`).trim();
+                // ถ้าไม่มีชื่อในไฟล์ Excel ให้ใส่เป็น "นิสิตคนที่ X"
+                const studentName = nameKey ? String(row[nameKey] || '').trim() : `นิสิตคนที่ ${idx + 1}`;
                 
                 const sections = {};
                 let total = 0;
@@ -951,7 +961,7 @@
             });
 
             recalculateGrading();
-            showToast(`นำเข้าข้อมูลนิสิตเรียบร้อย ${rawStudentData.length} คน (กดปุ่ม "บันทึกสู่ Supabase" เพื่อเก็บลงฐานข้อมูล)`, 'success');
+            showToast(`นำเข้าข้อมูลนิสิตเรียบร้อย ${rawStudentData.length} คน (${secKeys.length} ส่วน)`, 'success');
         }
 
         // --- SAMPLE DEMO GENERATOR ---
