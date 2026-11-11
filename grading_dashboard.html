@@ -914,13 +914,11 @@
             // กรองคอลัมน์ว่าง (__EMPTY) ออก
             const keys = Object.keys(sampleRow).filter(k => k && !k.startsWith('__EMPTY'));
 
-            // ค้นหาคอลัมน์ รหัสนิสิต
+            // ค้นหาคอลัมน์ รหัสนิสิต และ ชื่อ-นามสกุล
             const idKey = keys.find(k => k.match(/รหัส|student_id|id|code/i)) || keys[0];
-
-            // ค้นหาคอลัมน์ ชื่อ-นามสกุล (ถ้าไม่มี จะไม่ดึงคอลัมน์คะแนนมามั่ว)
             const nameKey = keys.find(k => k.match(/ชื่อ|name|fullname/i));
 
-            // คอลัมน์คะแนนทั้งหมด (ยกเว้นรหัส ชื่อ และคำสรุป)
+            // คอลัมน์คะแนนรายส่วน
             const secKeys = keys.filter(k => 
                 k !== idKey && 
                 k !== nameKey && 
@@ -932,16 +930,32 @@
                 return;
             }
 
+            // คำนวณคะแนนเต็มของแต่ละส่วนอย่างแม่นยำ
             sectionMaxScores = {};
             secKeys.forEach(sec => {
                 const scores = jsonData.map(r => parseFloat(r[sec]) || 0);
                 const maxVal = Math.max(...scores);
-                sectionMaxScores[sec] = maxVal > 0 ? Math.ceil(maxVal) : 30;
+
+                // 1. ตรวจจับตัวเลขเปอร์เซ็นต์ในชื่อคอลัมน์ เช่น "แบบฝึกหัด 20%" -> 20
+                const headerMatch = sec.match(/(\d+(?:\.\d+)?)\s*%/i) || sec.match(/(\d+(?:\.\d+)?)/);
+
+                if (headerMatch && parseFloat(headerMatch[1]) > 0) {
+                    sectionMaxScores[sec] = parseFloat(headerMatch[1]);
+                } else {
+                    // 2. ถ้าชื่อไม่มีตัวเลข ให้ปัดไปหาคะแนนเต็มมาตรฐาน (10, 20, 25, 30, 40, 50, 100)
+                    if (maxVal <= 10) sectionMaxScores[sec] = 10;
+                    else if (maxVal <= 20) sectionMaxScores[sec] = 20;
+                    else if (maxVal <= 25) sectionMaxScores[sec] = 25;
+                    else if (maxVal <= 30) sectionMaxScores[sec] = 30;
+                    else if (maxVal <= 40) sectionMaxScores[sec] = 40;
+                    else if (maxVal <= 50) sectionMaxScores[sec] = 50;
+                    else if (maxVal <= 100) sectionMaxScores[sec] = 100;
+                    else sectionMaxScores[sec] = Math.ceil(maxVal);
+                }
             });
 
             rawStudentData = jsonData.map((row, idx) => {
                 const studentId = String(row[idKey] || (68051000 + idx + 1)).trim();
-                // ถ้าไม่มีชื่อในไฟล์ Excel ให้ใส่เป็น "นิสิตคนที่ X"
                 const studentName = nameKey ? String(row[nameKey] || '').trim() : `นิสิตคนที่ ${idx + 1}`;
                 
                 const sections = {};
