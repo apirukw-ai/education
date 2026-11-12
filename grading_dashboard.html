@@ -412,7 +412,12 @@
                             total: parseFloat(item.total_score)
                         };
                     });
-
+			// 🟢 แทรกตรงบรรทัด 415: ดึงคะแนนเต็มจริงจากฐานข้อมูล (ถ้ามี) มาทับค่าที่เดาไว้
+                if (data[0].section_max_scores) {
+                    sectionMaxScores = typeof data[0].section_max_scores === 'string'
+                        ? JSON.parse(data[0].section_max_scores)
+                        : data[0].section_max_scores;
+                }
                     recalculateGrading();
                     showToast(`โหลดข้อมูลปี ${year} จาก Supabase เรียบร้อยแล้ว (${data.length} คน)`, 'success');
                 } else {
@@ -471,6 +476,7 @@
                     student_id: student.id,
                     student_name: student.name,
                     section_scores: student.sections,
+					section_max_scores: sectionMaxScores, // 🟢 เพิ่มบรรทัดนี้ตอนบันทึก
                     total_score: student.total,
                     t_score: student.tScore,
                     is_pass: student.isPass,
