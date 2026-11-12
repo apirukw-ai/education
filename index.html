@@ -295,10 +295,10 @@
                 <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-2">
                     <div class="font-semibold text-slate-800 flex items-center gap-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                        ความยืดหยุ่นของระบบจัดการ
+                        ซิงค์ข้อมูลอัตโนมัติ (Real-time Sync)
                     </div>
                     <p class="text-xs leading-relaxed text-slate-600">
-                        ท่านสามารถใช้ปุ่ม <strong>"+ เพิ่มข้อมูลปีใหม่"</strong> เพื่อป้อนข้อมูลคะแนนสอบของปี พ.ศ. ถัดไป (เช่น 2569) ระบบจะคำนวณสถิติและอัปเดตสมการ Regression ใหม่ให้อัตโนมัติทันที
+                        เมื่อบันทึกคะแนนสอบของปีการศึกษาใหม่ในหน้า <strong>"ระบบตัดเกรด &amp; MPL"</strong> ข้อมูลจะถูกซิงค์ผ่านฐานข้อมูลกลางเพื่อคำนวณสถิติและอัปเดตสมการ Regression ในหน้านี้ให้อัตโนมัติทันที
                     </p>
                 </div>
             </div>
@@ -319,9 +319,6 @@
                         <input type="text" id="table-search" onkeyup="filterTable()" placeholder="ค้นหาปี พ.ศ. ..." class="w-full text-xs border border-slate-300 rounded-xl px-3 py-2 pl-8 focus:outline-none focus:ring-2 focus:ring-medical-500">
                         <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
                     </div>
-                    <button onclick="openAddModal()" class="whitespace-nowrap px-3 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition">
-                        <i class="fa-solid fa-plus mr-1"></i> เพิ่มปีใหม่
-                    </button>
                 </div>
             </div>
 
@@ -957,7 +954,7 @@
             tbody.innerHTML = '';
 
             if (masterData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-400 text-xs">ไม่มีข้อมูลสถิติในระบบ กดปุ่ม "+ เพิ่มปีใหม่" หรือ "รีเซ็ตตั้งต้น"</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-400 text-xs">ไม่มีข้อมูลสถิติในระบบ</td></tr>`;
                 return;
             }
 
