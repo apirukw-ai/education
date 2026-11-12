@@ -78,20 +78,18 @@
 
             <!-- Global Action Buttons -->
             <div class="flex flex-wrap items-center gap-2">
-                <!-- Navigation Button to Item Analysis Dashboard -->
+                <!-- ปุ่มลิงก์ไปหน้าตัดเกรด -->
+                <a href="grading_dashboard.html" class="inline-flex items-center gap-2 px-3.5 py-2 bg-emerald-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-emerald-700 transition shadow-md">
+                    <i class="fa-solid fa-graduation-cap text-sm"></i>
+                    ระบบตัดเกรด & MPL
+                </a>
+
+                <!-- ปุ่มลิงก์ไปหน้าวิเคราะห์ข้อสอบรายข้อ -->
                 <a href="item_analysis_dashboard.html" class="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-indigo-700 transition shadow-md">
                     <i class="fa-solid fa-list-check text-sm"></i>
                     วิเคราะห์ข้อสอบรายข้อ
                 </a>
 
-                <button onclick="openAddModal()" class="inline-flex items-center gap-2 px-3.5 py-2 bg-emerald-600 text-white rounded-xl text-xs sm:text-sm font-semibold hover:bg-emerald-700 transition shadow-md">
-                    <i class="fa-solid fa-plus text-sm"></i>
-                    เพิ่มข้อมูลปีใหม่
-                </button>
-                <button onclick="confirmResetData()" class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-50 transition shadow-sm">
-                    <i class="fa-solid fa-rotate-left text-amber-500"></i>
-                    รีเซ็ตตั้งต้น
-                </button>
                 <button onclick="exportToCSV()" class="inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-50 transition shadow-sm">
                     <i class="fa-solid fa-file-csv text-emerald-600"></i>
                     CSV
@@ -445,7 +443,7 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlwcm9rdHZ2ZXRzYnh4bXBwdHVqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyOTU3NDEsImV4cCI6MjEwMjg3MTc0MX0.Kc0USo30u4gvZNJ1bsOdD9k6nwEBcY7lNMAQxWEFzqw';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Master Dataset (2561 - 2568) strictly aligned with exact course statistics
+        // ข้อมูลตั้งต้นย้อนหลัง (2561 - 2567) สำหรับปีที่ยังไม่ได้นำเข้าคะแนนรายบุคคลในระบบตัดเกรด
         const defaultMasterData = [
             { year: '2561', mean: 64.64, sd: 4.66, p90: 73.83, mpl: 47.99 },
             { year: '2562', mean: 64.63, sd: 5.71, p90: 73.46, mpl: 47.75 },
@@ -474,28 +472,110 @@
             loadInitialData();
         };
 
-        // Load Initial Data (from Supabase or local default)
-        async function loadInitialData() {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('mpl_records')
-                    .select('*')
-                    .order('year', { ascending: true });
+        // ฟังก์ชันคำนวณ Percentile (แบบเดียวกับหน้า grading_dashboard.html และ Excel PERCENTILE.INC)
+        function calculatePercentile(arr, p) {
+            if (!arr || arr.length === 0) return 0;
+            const sorted = [...arr].sort((a, b) => a - b);
+            const index = (p / 100) * (sorted.length - 1);
+            const lower = Math.floor(index);
+            const upper = Math.ceil(index);
+            const weight = index - lower;
+            if (upper >= sorted.length) return sorted[lower];
+            return sorted[lower] * (1 - weight) + sorted[upper] * weight;
+        }
 
-                if (!error && data && data.length > 0) {
-                    masterData = data.map(item => ({
-                        year: String(item.year),
-                        mean: parseFloat(item.mean),
-                        sd: parseFloat(item.sd),
-                        p90: item.p90 ? parseFloat(item.p90) : parseFloat((item.mpl / 0.65).toFixed(2)),
-                        mpl: parseFloat(item.mpl)
-                    }));
+        // ดึงคะแนนรายบุคคลจากตาราง mpl_student_grades มาคำนวณค่าสถิติรายปีให้ตรงกับหน้าตัดเกรด
+        async function fetchStatsFromGradingTable() {
+            const { data, error } = await supabaseClient
+                .from('mpl_student_grades')
+                .select('academic_year, total_score, section_scores');
+
+            if (error) {
+                console.error('Supabase mpl_student_grades fetch error:', error);
+                return [];
+            }
+
+            if (!data || data.length === 0) return [];
+
+            // จัดกลุ่มข้อมูลตามปีการศึกษา
+            const groupedByYear = {};
+            data.forEach(row => {
+                const yr = String(row.academic_year).trim();
+                if (!groupedByYear[yr]) groupedByYear[yr] = [];
+                groupedByYear[yr].push(row);
+            });
+
+            // คำนวณ Mean, SD, P90 และ MPL รายส่วน ของแต่ละปี
+            return Object.keys(groupedByYear).sort().map(year => {
+                const rows = groupedByYear[year];
+                const n = rows.length;
+                const totals = rows.map(r => parseFloat(r.total_score) || 0);
+
+                // 1. Mean และ Sample SD (n - 1) ตรงกับหน้าตัดเกรด
+                const mean = totals.reduce((sum, val) => sum + val, 0) / n;
+                const variance = totals.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / (n > 1 ? n - 1 : 1);
+                const sd = Math.sqrt(variance);
+
+                // 2. P90 ของคะแนนรวม
+                const p90Total = calculatePercentile(totals, 90);
+
+                // 3. MPL รวม = ผลรวมของ (0.65 * P90 รายส่วนที่ปัดทศนิยม 2 ตำแหน่งแล้ว)
+                const sectionMap = {};
+                rows.forEach(r => {
+                    const secObj = typeof r.section_scores === 'string'
+                        ? JSON.parse(r.section_scores)
+                        : (r.section_scores || {});
+                    Object.keys(secObj).forEach(secName => {
+                        if (!sectionMap[secName]) sectionMap[secName] = [];
+                        sectionMap[secName].push(parseFloat(secObj[secName]) || 0);
+                    });
+                });
+
+                let totalMpl = 0;
+                const secKeys = Object.keys(sectionMap);
+                if (secKeys.length > 0) {
+                    secKeys.forEach(secName => {
+                        const secP90 = calculatePercentile(sectionMap[secName], 90);
+                        const secMpl = Math.round((0.65 * secP90) * 100) / 100;
+                        totalMpl += secMpl;
+                    });
                 } else {
-                    masterData = JSON.parse(JSON.stringify(defaultMasterData));
+                    totalMpl = Math.round((0.65 * p90Total) * 100) / 100;
+                }
+
+                return {
+                    year: year,
+                    mean: parseFloat(mean.toFixed(2)),
+                    sd: parseFloat(sd.toFixed(2)),
+                    p90: parseFloat(p90Total.toFixed(2)),
+                    mpl: parseFloat(totalMpl.toFixed(2)),
+                    fromSupabase: true
+                };
+            });
+        }
+
+        // Load Initial Data (ผสานข้อมูลตั้งต้น 2561-2567 เข้ากับข้อมูลจริงจากหน้าตัดเกรดใน Supabase)
+        async function loadInitialData() {
+            // เริ่มจากข้อมูลย้อนหลังตั้งต้น
+            masterData = JSON.parse(JSON.stringify(defaultMasterData));
+
+            try {
+                const liveGradingYears = await fetchStatsFromGradingTable();
+
+                if (liveGradingYears.length > 0) {
+                    liveGradingYears.forEach(liveItem => {
+                        const idx = masterData.findIndex(d => d.year === liveItem.year);
+                        if (idx !== -1) {
+                            // เขียนทับปีที่มีข้อมูลจริงในระบบตัดเกรดแล้ว (เช่น ปี 2568 -> MPL 51.73)
+                            masterData[idx] = liveItem;
+                        } else {
+                            // เพิ่มปีใหม่ (เช่น 2569, 2570) ต่อท้ายให้อัตโนมัติ
+                            masterData.push(liveItem);
+                        }
+                    });
                 }
             } catch (err) {
                 console.error('Supabase load error:', err);
-                masterData = JSON.parse(JSON.stringify(defaultMasterData));
             }
 
             sortMasterData();
@@ -504,6 +584,31 @@
             renderChart();
             updateKPIs();
             renderTable();
+            updateDynamicInsights();
+        }
+
+        // อัปเดตข้อความสรุปด้านบนและกล่อง Insights ให้ตรงกับปีล่าสุดจริง
+        function updateDynamicInsights() {
+            if (masterData.length === 0) return;
+            const minYr = masterData[0].year;
+            const latest = masterData[masterData.length - 1];
+
+            const headerSub = document.querySelector('header p');
+            if (headerSub) {
+                headerSub.innerText = `รายวิชา 180432 (Laws and Ethics in Pharmacy) - ข้อมูล พ.ศ. ${minYr} - ${latest.year}`;
+            }
+
+            const insightCards = document.querySelectorAll('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-4 > div');
+            if (insightCards && insightCards.length > 0) {
+                const titleEl = insightCards[0].querySelector('div');
+                const descEl = insightCards[0].querySelector('p');
+                if (titleEl) {
+                    titleEl.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> วิเคราะห์เกณฑ์ MPL ปี ${latest.year}`;
+                }
+                if (descEl) {
+                    descEl.innerHTML = `ในปี <strong>${latest.year} เกณฑ์ MPL อยู่ที่ ${latest.mpl.toFixed(2)}</strong> (คำนวณจาก Modified Cohen 0.65 &times; P90 รายส่วน, P90 รวม = ${latest.p90.toFixed(2)}) คะแนนเฉลี่ย (Mean) อยู่ที่ ${latest.mean.toFixed(2)} และ SD อยู่ที่ ${latest.sd.toFixed(2)} แสดงถึงระดับมาตรฐานวิชาชีพที่คงเส้นคงวา`;
+                }
+            }
         }
 
         // Sort data chronologically
@@ -569,7 +674,8 @@
 
         function getItemMPL(item) {
             if (currentFormula === 'cohen') {
-                return item.p90 ? parseFloat((0.65 * item.p90).toFixed(2)) : item.mpl;
+                // ใช้ค่า MPL ที่คำนวณจากรายส่วน (Section Modified Cohen) ของหน้าตัดเกรดโดยตรง
+                return typeof item.mpl === 'number' ? item.mpl : parseFloat((0.65 * item.p90).toFixed(2));
             } else {
                 let pred = regCoeffs.b1 * item.mean + regCoeffs.b2 * item.sd + regCoeffs.b0;
                 return parseFloat(pred.toFixed(2));
@@ -755,8 +861,7 @@
                                     const index = context[0].dataIndex;
                                     const item = activeData[index];
                                     const mplVal = getItemMPL(item);
-                                    return item ? `-------------------
-ส่วนต่าง (Mean - MPL): ${(item.mean - mplVal).toFixed(2)} คะแนน` : '';
+                                    return item ? `-------------------\nส่วนต่าง (Mean - MPL): ${(item.mean - mplVal).toFixed(2)} คะแนน` : '';
                                 }
                             }
                         }
@@ -874,10 +979,15 @@
                     }
                 }
 
+                // แสดงป้ายกำกับเล็กๆ หากดึงมาจากหน้าตัดเกรด Supabase โดยตรง
+                const syncBadge = item.fromSupabase
+                    ? `<span class="ml-1.5 px-1.5 py-0.5 text-[10px] font-medium bg-emerald-100 text-emerald-700 rounded-md" title="ซิงค์ข้อมูลจากหน้าตัดเกรดอัตโนมัติ">Live</span>`
+                    : '';
+
                 const tr = document.createElement('tr');
                 tr.className = 'hover:bg-slate-50/80 transition border-b border-slate-100';
                 tr.innerHTML = `
-                    <td class="py-3.5 px-6 font-bold text-slate-800">พ.ศ. ${item.year}</td>
+                    <td class="py-3.5 px-6 font-bold text-slate-800">พ.ศ. ${item.year}${syncBadge}</td>
                     <td class="py-3.5 px-6 text-right font-semibold text-blue-700">${item.mean.toFixed(2)}</td>
                     <td class="py-3.5 px-6 text-right font-medium text-amber-600">${item.sd.toFixed(2)}</td>
                     <td class="py-3.5 px-6 text-right font-bold text-purple-700 bg-purple-50/20">${item.p90.toFixed(2)}</td>
@@ -934,7 +1044,7 @@
             document.getElementById('preview-mpl-reg').innerText = (meanVal > 0 && sdVal > 0) ? mplReg.toFixed(2) : '--';
         }
 
-        async function handleAddYear(e) {
+        function handleAddYear(e) {
             e.preventDefault();
             const yearVal = document.getElementById('input-year').value.trim();
             const meanVal = parseFloat(document.getElementById('input-mean').value);
@@ -947,28 +1057,10 @@
             }
 
             const mplVal = parseFloat((0.65 * p90Val).toFixed(2));
-
-            const { error } = await supabaseClient
-                .from('mpl_records')
-                .insert([{ 
-                    year: yearVal, 
-                    mean: meanVal, 
-                    sd: sdVal, 
-                    p90: p90Val,
-                    mpl: mplVal 
-                }]);
-
-            if (error) {
-                console.warn('Supabase insert warning:', error.message);
-                masterData.push({ year: yearVal, mean: meanVal, sd: sdVal, p90: p90Val, mpl: mplVal });
-                saveAndRefreshState();
-                closeAddModal();
-                showToast(`เพิ่มข้อมูลปี พ.ศ. ${yearVal} (Local) เรียบร้อยแล้ว`, 'success');
-            } else {
-                closeAddModal();
-                showToast(`เพิ่มข้อมูลปี พ.ศ. ${yearVal} เรียบร้อยแล้ว`, 'success');
-                await loadInitialData();
-            }
+            masterData.push({ year: yearVal, mean: meanVal, sd: sdVal, p90: p90Val, mpl: mplVal });
+            saveAndRefreshState();
+            closeAddModal();
+            showToast(`จำลองข้อมูลปี พ.ศ. ${yearVal} ในกราฟเรียบร้อยแล้ว`, 'success');
         }
 
         function openDeleteModal(year) {
@@ -982,27 +1074,13 @@
             document.getElementById('deleteModal').classList.add('hidden');
         }
 
-        async function executeDeleteYear() {
+        function executeDeleteYear() {
             if (!yearToDelete) return;
-
-            const { error } = await supabaseClient
-                .from('mpl_records')
-                .delete()
-                .eq('year', yearToDelete);
-
-            if (error) {
-                console.warn('Supabase delete warning:', error.message);
-                masterData = masterData.filter(d => d.year !== yearToDelete);
-                saveAndRefreshState();
-                yearToDelete = null;
-                closeDeleteModal();
-                showToast('ลบข้อมูลเรียบร้อยแล้ว', 'success');
-            } else {
-                yearToDelete = null;
-                closeDeleteModal();
-                await loadInitialData();
-                showToast('ลบข้อมูลจากระบบเรียบร้อยแล้ว', 'success');
-            }
+            masterData = masterData.filter(d => d.year !== yearToDelete);
+            saveAndRefreshState();
+            yearToDelete = null;
+            closeDeleteModal();
+            showToast('ซ่อนข้อมูลปีที่เลือกออกจากมุมมองปัจจุบันแล้ว', 'success');
         }
 
         function saveAndRefreshState() {
@@ -1012,12 +1090,12 @@
             updateChart();
             updateKPIs();
             renderTable();
+            updateDynamicInsights();
         }
 
-        function confirmResetData() {
-            masterData = JSON.parse(JSON.stringify(defaultMasterData));
-            saveAndRefreshState();
-            showToast('รีเซ็ตข้อมูลเป็นชุดมาตรฐาน 2561-2568 เรียบร้อย', 'success');
+        async function confirmResetData() {
+            await loadInitialData();
+            showToast('ซิงค์ข้อมูลล่าสุดจากหน้าตัดเกรดและค่าตั้งต้นเรียบร้อย', 'success');
         }
 
         function exportToCSV() {
